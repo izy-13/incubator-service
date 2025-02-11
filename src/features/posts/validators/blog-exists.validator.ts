@@ -7,14 +7,15 @@ import {
 import { BlogsService } from '../../blogs/blogs.service';
 import { Injectable } from '@nestjs/common';
 
-@ValidatorConstraint({ async: false })
+@ValidatorConstraint({ async: true })
 @Injectable()
 export class BlogExistsConstraint implements ValidatorConstraintInterface {
   constructor(private readonly blogsService: BlogsService) {}
 
-  validate(blogId: string) {
-    const blog = this.blogsService?.findAll().find((blog) => blog.id === blogId);
-    return !!blog;
+  async validate(blogId: string) {
+    // TODO need another method to findOne only for validation, without throwing an NotFoundException
+    const blogs = await this.blogsService?.findAll();
+    return !!blogs.find((blog) => blog.id === blogId);
   }
 
   defaultMessage() {

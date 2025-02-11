@@ -5,6 +5,8 @@ import { BasicAuthMiddleware } from '../../middlewares';
 import { routesConstants } from '../../coreUtils';
 import { BlogsModule } from '../blogs/blogs.module';
 import { BlogExistsConstraint } from './validators/blog-exists.validator';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PostDb, PostSchema } from './schemas/post.schema';
 
 const { POSTS } = routesConstants;
 
@@ -12,7 +14,7 @@ const { POSTS } = routesConstants;
   controllers: [PostsController],
   providers: [PostsService, BlogExistsConstraint],
   exports: [PostsService],
-  imports: [BlogsModule],
+  imports: [MongooseModule.forFeature([{ name: PostDb.name, schema: PostSchema }]), BlogsModule],
 })
 export class PostsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

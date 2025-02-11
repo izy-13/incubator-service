@@ -15,6 +15,7 @@ import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { routesConstants, transformValidationFactory } from '../../coreUtils';
+import { BlogEntity } from './entities/blog.entity';
 
 const { BLOGS } = routesConstants;
 
@@ -25,17 +26,17 @@ export class BlogsController {
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createBlogDto: CreateBlogDto) {
+  create(@Body() createBlogDto: CreateBlogDto): Promise<BlogEntity> {
     return this.blogsService.create(createBlogDto);
   }
 
   @Get()
-  findAll() {
+  findAll(): Promise<BlogEntity[]> {
     return this.blogsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<BlogEntity> {
     return this.blogsService.findOne(id);
   }
 

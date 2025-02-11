@@ -2,6 +2,7 @@ import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/commo
 import { NextFunction, Request, Response } from 'express';
 import { decodeBase64 } from '../../coreUtils';
 
+// rework into guard
 @Injectable()
 export class BasicAuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {

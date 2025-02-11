@@ -1,77 +1,101 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Post } from './entities/post.entity';
+import { PostEntity } from './entities/post.entity';
+import { PostDb } from './schemas/post.schema';
 import { BlogsService } from '../blogs/blogs.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class PostsService {
-  private posts: Post[] = [
-    {
-      blogId: '11',
-      blogName: 'Blog name',
-      content: 'some content',
-      id: '1',
-      shortDescription: 'short desc',
-      title: 'some title',
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  constructor(
+    private readonly blogsService: BlogsService,
+    @InjectModel(PostDb.name) private readonly postModel: Model<PostDb>,
+  ) {}
 
-  constructor(private readonly blogsService: BlogsService) {}
+  async create(createPostDto: CreatePostDto): Promise<PostEntity> {
+    const blog = await this.blogsService.findOne(createPostDto.blogId);
 
-  create(createPostDto: CreatePostDto) {
-    const blog = this.blogsService.findOne(createPostDto.blogId);
-
-    const newPost: Post = {
-      id: Math.floor(Math.random() * 100000).toString(),
+    const newPost: PostDb = {
       ...createPostDto,
-      // createdAt: new Date().toISOString(),
       blogName: blog.name,
+      blogId: new Types.ObjectId(blog.id),
     };
 
-    this.posts.push(newPost);
-    return newPost;
+    return this.postModel
+      .create(newPost)
+      .then(({ _id, title, content, shortDescription, createdAt, blogId, blogName }) => ({
+        id: _id.toJSON(),
+        title,
+        content,
+        shortDescription,
+        createdAt: new Date(createdAt || '').toISOString(),
+        blogId: blogId.toJSON(),
+        blogName: blogName,
+      }));
   }
 
-  findAll(): Post[] {
-    return this.posts;
+  async findAll(): Promise<PostEntity[]> {
+    const posts = await this.postModel.find().exec();
+    // TODO adjust data transform for avoid copycode
+    return posts.map(({ _id, title, content, createdAt, blogId, blogName, shortDescription }) => ({
+      id: _id.toJSON(),
+      title,
+      content,
+      shortDescription,
+      createdAt: new Date(createdAt || '').toISOString(),
+      blogId: blogId.toJSON(),
+      blogName,
+    }));
   }
 
-  findOne(id: string): Post {
-    const post = this.posts.find((post) => post.id === id);
+  async findOne(id: string): Promise<PostEntity> {
+    return this.postModel
+      .findOne({ _id: id })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Post with ID ${id} not found`);
+        } else {
+          const { _id, title, content, shortDescription, createdAt, blogId, blogName } = result;
 
-    if (!post) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-
-    return post;
+          return {
+            id: _id.toJSON(),
+            title,
+            content,
+            shortDescription,
+            createdAt: new Date(createdAt || '').toISOString(),
+            blogId: blogId.toJSON(),
+            blogName,
+          };
+        }
+      });
   }
 
-  update(id: string, updatePostDto: UpdatePostDto) {
-    const postIndex = this.posts.findIndex((post) => post.id === id);
-
-    if (postIndex === -1) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-
-    this.posts[postIndex] = {
-      ...this.posts[postIndex],
-      ...updatePostDto,
-    };
+  async update(id: string, updatePostDto: UpdatePostDto) {
+    return this.postModel
+      .findByIdAndUpdate({ _id: id }, updatePostDto, { new: true })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Post with ID ${id} not found`);
+        }
+      });
   }
 
-  remove(id: string) {
-    const postIndex = this.posts.findIndex((post) => post.id === id);
-
-    if (postIndex === -1) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-
-    this.posts.splice(postIndex, 1);
+  async remove(id: string) {
+    return this.postModel
+      .findByIdAndDelete({ _id: id })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Post with ID ${id} not found`);
+        }
+      });
   }
 
   clearAll() {
-    this.posts = [];
+    return this.postModel.deleteMany({}).exec();
   }
 }

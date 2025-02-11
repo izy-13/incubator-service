@@ -1,71 +1,86 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import { Blog } from './entities/blog.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Blog } from './schemas/blog.schema';
+import { BlogEntity } from './entities/blog.entity';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class BlogsService {
-  private blogs: Blog[] = [
-    {
-      createdAt: new Date().toISOString(),
-      description: 'some description',
-      id: '11',
-      isMembership: false,
-      name: 'some name',
-      websiteUrl: 'www.google.com',
-    },
-  ];
+  constructor(@InjectModel(Blog.name) private readonly blogModel: Model<Blog>) {}
 
-  create(createBlogDto: CreateBlogDto) {
-    const newBlog: Blog = {
-      id: Math.floor(Math.random() * 100000).toString(),
-      ...createBlogDto,
-      // isMembership: false,
-      // createdAt: new Date().toISOString(),
-    };
-
-    this.blogs.push(newBlog);
-    return newBlog;
+  async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
+    return this.blogModel
+      .create(createBlogDto)
+      .then(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
+        id: _id.toJSON(),
+        name,
+        createdAt: new Date(createdAt || '').toISOString(),
+        description,
+        websiteUrl,
+        isMembership,
+      }));
   }
 
-  findAll() {
-    return this.blogs;
+  async findAll(): Promise<BlogEntity[]> {
+    const blogs = await this.blogModel.find().exec();
+    // TODO adjust data transform for avoid copycode
+    return blogs.map(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
+      id: _id.toJSON(),
+      name,
+      createdAt: new Date(createdAt || '').toISOString(),
+      description,
+      websiteUrl,
+      isMembership,
+    }));
   }
 
-  findOne(id: string): Blog {
-    const blog = this.blogs.find((post) => post.id === id);
+  async findOne(id: string): Promise<BlogEntity> {
+    return this.blogModel
+      .findOne({ _id: id })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Blog with ID ${id} not found`);
+        } else {
+          const { _id, name, createdAt, description, websiteUrl, isMembership } = result;
 
-    if (!blog) {
-      throw new NotFoundException(`Blog with ID ${id} not found`);
-    }
-
-    return blog;
+          return {
+            id: _id.toJSON(),
+            name,
+            createdAt: new Date(createdAt || '').toISOString(),
+            description,
+            websiteUrl,
+            isMembership,
+          };
+        }
+      });
   }
 
-  update(id: string, updateBlogDto: UpdateBlogDto) {
-    const blogIndex = this.blogs.findIndex((post) => post.id === id);
-
-    if (blogIndex === -1) {
-      throw new NotFoundException(`Blog with ID ${id} not found`);
-    }
-
-    this.blogs[blogIndex] = {
-      ...this.blogs[blogIndex],
-      ...updateBlogDto,
-    };
+  async update(id: string, updateBlogDto: UpdateBlogDto) {
+    return this.blogModel
+      .findByIdAndUpdate({ _id: id }, updateBlogDto, { new: true })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Blog with ID ${id} not found`);
+        }
+      });
   }
 
   remove(id: string) {
-    const blogIndex = this.blogs.findIndex((post) => post.id === id);
-
-    if (blogIndex === -1) {
-      throw new NotFoundException(`Blog with ID ${id} not found`);
-    }
-
-    this.blogs.splice(blogIndex, 1);
+    return this.blogModel
+      .findByIdAndDelete({ _id: id })
+      .exec()
+      .then((result) => {
+        if (!result) {
+          throw new NotFoundException(`Blog with ID ${id} not found`);
+        }
+      });
   }
 
   clearAll() {
-    this.blogs = [];
+    return this.blogModel.deleteMany({}).exec();
   }
 }

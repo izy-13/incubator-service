@@ -15,6 +15,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { routesConstants, transformValidationFactory } from '../../coreUtils';
+import { PostEntity } from './entities/post.entity';
 
 const { POSTS } = routesConstants;
 
@@ -25,17 +26,17 @@ export class PostsController {
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createPostDto: CreatePostDto) {
+  create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
     return this.postsService.create(createPostDto);
   }
 
   @Get()
-  findAll() {
+  findAll(): Promise<PostEntity[]> {
     return this.postsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<PostEntity> {
     return this.postsService.findOne(id);
   }
 

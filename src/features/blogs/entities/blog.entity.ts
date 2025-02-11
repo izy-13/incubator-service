@@ -1,8 +1,8 @@
-export class Blog {
+export class BlogEntity {
   id: string;
   name: string;
   description: string;
   websiteUrl: string;
-  createdAt?: string;
-  isMembership?: boolean;
+  createdAt: string;
+  isMembership: boolean;
 }
