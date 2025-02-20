@@ -5,13 +5,14 @@ import { routesConstants } from '../../coreUtils';
 import { BasicAuthMiddleware } from '../../middlewares';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './schemas/blog.schema';
+import { BlogsQueryRepository, BlogsRepository } from './repositories';
 
 const { BLOGS } = routesConstants;
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }])],
   controllers: [BlogsController],
-  providers: [BlogsService],
+  providers: [BlogsService, BlogsQueryRepository, BlogsRepository],
   exports: [BlogsService],
 })
 export class BlogsModule implements NestModule {

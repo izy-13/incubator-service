@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { transformValidationFactory } from '../../coreUtils';
-import { AppModule } from '../../app.module';
+import { transformValidationFactory } from '../../../coreUtils';
+import { AppModule } from '../../../app.module';
 
 describe('BlogsController (e2e)', () => {
   let app: INestApplication;

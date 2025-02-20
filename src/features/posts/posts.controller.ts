@@ -16,6 +16,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { routesConstants, transformValidationFactory } from '../../coreUtils';
 import { PostEntity } from './entities/post.entity';
+import { ObjectIdValidationPipe } from '../../pipes';
 
 const { POSTS } = routesConstants;
 
@@ -36,20 +37,20 @@ export class PostsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<PostEntity> {
+  findOne(@Param('id', ObjectIdValidationPipe) id: string): Promise<PostEntity> {
     return this.postsService.findOne(id);
   }
 
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
+  update(@Param('id', ObjectIdValidationPipe) id: string, @Body() updatePostDto: UpdatePostDto) {
     return this.postsService.update(id, updatePostDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ObjectIdValidationPipe) id: string) {
     return this.postsService.remove(id);
   }
 }

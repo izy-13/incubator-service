@@ -9,8 +9,8 @@ export class TestingService {
     private readonly postsService: PostsService,
   ) {}
 
-  remove() {
-    this.blogsService.clearAll();
-    this.postsService.clearAll();
+  async remove() {
+    await this.blogsService.clearAll();
+    await this.postsService.clearAll();
   }
 }

@@ -13,9 +13,8 @@ export class BlogExistsConstraint implements ValidatorConstraintInterface {
   constructor(private readonly blogsService: BlogsService) {}
 
   async validate(blogId: string) {
-    // TODO need another method to findOne only for validation, without throwing an NotFoundException
-    const blogs = await this.blogsService?.findAll();
-    return !!blogs.find((blog) => blog.id === blogId);
+    const blog = await this.blogsService?.findOne(blogId);
+    return !!blog;
   }
 
   defaultMessage() {

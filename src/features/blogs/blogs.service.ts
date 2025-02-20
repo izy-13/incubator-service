@@ -1,86 +1,41 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog } from './schemas/blog.schema';
 import { BlogEntity } from './entities/blog.entity';
 import { Model } from 'mongoose';
+import { BlogsQueryRepository, BlogsRepository } from './repositories';
 
 @Injectable()
 export class BlogsService {
-  constructor(@InjectModel(Blog.name) private readonly blogModel: Model<Blog>) {}
+  constructor(
+    @InjectModel(Blog.name) private readonly blogModel: Model<Blog>,
+    private readonly queryRepository: BlogsQueryRepository,
+    private readonly repository: BlogsRepository,
+  ) {}
 
-  async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
-    return this.blogModel
-      .create(createBlogDto)
-      .then(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
-        id: _id.toJSON(),
-        name,
-        createdAt: new Date(createdAt || '').toISOString(),
-        description,
-        websiteUrl,
-        isMembership,
-      }));
+  create(createBlogDto: CreateBlogDto): Promise<BlogEntity | void> {
+    return this.repository.createBlog(createBlogDto);
   }
 
-  async findAll(): Promise<BlogEntity[]> {
-    const blogs = await this.blogModel.find().exec();
-    // TODO adjust data transform for avoid copycode
-    return blogs.map(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
-      id: _id.toJSON(),
-      name,
-      createdAt: new Date(createdAt || '').toISOString(),
-      description,
-      websiteUrl,
-      isMembership,
-    }));
+  findAll(): Promise<BlogEntity[]> {
+    return this.queryRepository.findAllBlogs();
   }
 
-  async findOne(id: string): Promise<BlogEntity> {
-    return this.blogModel
-      .findOne({ _id: id })
-      .exec()
-      .then((result) => {
-        if (!result) {
-          throw new NotFoundException(`Blog with ID ${id} not found`);
-        } else {
-          const { _id, name, createdAt, description, websiteUrl, isMembership } = result;
-
-          return {
-            id: _id.toJSON(),
-            name,
-            createdAt: new Date(createdAt || '').toISOString(),
-            description,
-            websiteUrl,
-            isMembership,
-          };
-        }
-      });
+  findOne(id: string): Promise<BlogEntity> {
+    return this.queryRepository.findBlogById(id);
   }
 
-  async update(id: string, updateBlogDto: UpdateBlogDto) {
-    return this.blogModel
-      .findByIdAndUpdate({ _id: id }, updateBlogDto, { new: true })
-      .exec()
-      .then((result) => {
-        if (!result) {
-          throw new NotFoundException(`Blog with ID ${id} not found`);
-        }
-      });
+  update(id: string, updateBlogDto: UpdateBlogDto) {
+    return this.repository.updateBlog(id, updateBlogDto);
   }
 
   remove(id: string) {
-    return this.blogModel
-      .findByIdAndDelete({ _id: id })
-      .exec()
-      .then((result) => {
-        if (!result) {
-          throw new NotFoundException(`Blog with ID ${id} not found`);
-        }
-      });
+    return this.repository.deleteBlog(id);
   }
 
   clearAll() {
-    return this.blogModel.deleteMany({}).exec();
+    return this.repository.deleteAllBlogs();
   }
 }
