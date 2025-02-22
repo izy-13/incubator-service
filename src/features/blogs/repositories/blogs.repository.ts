@@ -16,7 +16,7 @@ export class BlogsRepository {
       .then(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
         id: _id.toJSON(),
         name,
-        createdAt: new Date(createdAt || '').toISOString(),
+        createdAt: createdAt ? new Date(createdAt || '').toISOString() : '',
         description,
         websiteUrl,
         isMembership,

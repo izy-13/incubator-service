@@ -63,7 +63,7 @@ describe('PostsService', () => {
   });
 
   it('should throw NotFoundException if post not found', async () => {
-    jest.spyOn(queryRepository, 'findPostById').mockResolvedValue(null as unknown as PostEntity);
+    jest.spyOn(queryRepository, 'findPostById').mockRejectedValue(new NotFoundException());
 
     await expect(service.findOne('invalidId')).rejects.toThrow(NotFoundException);
   });

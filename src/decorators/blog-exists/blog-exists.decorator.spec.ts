@@ -1,5 +1,5 @@
-import { BlogExistsConstraint } from './blog-exists.validator';
-import { BlogsService } from '../../blogs/blogs.service';
+import { BlogExistsConstraint } from './blog-exists.decorator';
+import { BlogsService } from '../../features/blogs/blogs.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('BlogExistsConstraint', () => {
@@ -23,7 +23,7 @@ describe('BlogExistsConstraint', () => {
 
   it('should throw an error if blogsService.findOne throws an error', async () => {
     (blogsService.findOne as jest.Mock).mockRejectedValue(new NotFoundException());
-    await expect(blogExistsConstraint.validate('errorId')).rejects.toThrow(NotFoundException);
+    await expect(blogExistsConstraint.validate('errorId')).resolves.toBe(false);
   });
 
   it('should return the correct default message', () => {

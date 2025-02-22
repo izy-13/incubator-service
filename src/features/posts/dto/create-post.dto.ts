@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { BlogExists } from '../validators/blog-exists.validator';
+import { BlogExists } from '../../../decorators/blog-exists/blog-exists.decorator';
 
 export class CreatePostDto {
   @IsNotEmpty()

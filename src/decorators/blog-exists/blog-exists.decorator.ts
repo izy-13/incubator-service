@@ -4,7 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { BlogsService } from '../../blogs/blogs.service';
+import { BlogsService } from '../../features/blogs/blogs.service';
 import { Injectable } from '@nestjs/common';
 
 @ValidatorConstraint({ async: true })
@@ -13,8 +13,13 @@ export class BlogExistsConstraint implements ValidatorConstraintInterface {
   constructor(private readonly blogsService: BlogsService) {}
 
   async validate(blogId: string) {
-    const blog = await this.blogsService?.findOne(blogId);
-    return !!blog;
+    try {
+      const blog = await this.blogsService?.findOne(blogId);
+      return !!blog;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
 
   defaultMessage() {

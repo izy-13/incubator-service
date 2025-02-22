@@ -17,8 +17,10 @@ export class CreateBlogDto {
   description: string;
 
   @IsNotEmpty()
-  @IsUrl()
   @Transform(({ value }: { value: string }) => value.trim())
+  @IsUrl()
   @MaxLength(100)
   websiteUrl: string;
+
+  isMembership?: boolean;
 }

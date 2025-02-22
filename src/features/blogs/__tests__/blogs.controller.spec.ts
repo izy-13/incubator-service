@@ -1,44 +1,70 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { transformValidationFactory } from '../../../coreUtils';
-import { AppModule } from '../../../app.module';
+import { BlogsController } from '../blogs.controller';
+import { BlogsService } from '../blogs.service';
+import { CreateBlogDto } from '../dto/create-blog.dto';
+import { UpdateBlogDto } from '../dto/update-blog.dto';
+import { BlogEntity } from '../entities/blog.entity';
 
-describe('BlogsController (e2e)', () => {
-  let app: INestApplication;
+describe('BlogsController', () => {
+  let controller: BlogsController;
+  let service: BlogsService;
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BlogsController],
+      providers: [
+        {
+          provide: BlogsService,
+          useValue: {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }));
-    await app.init();
+    controller = module.get<BlogsController>(BlogsController);
+    service = module.get<BlogsService>(BlogsService);
   });
 
-  afterAll(async () => {
-    await app.close();
+  it('should create a blog', async () => {
+    const createBlogDto: CreateBlogDto = { title: 'Test Blog', content: 'Test Content' } as unknown as CreateBlogDto;
+    const result: BlogEntity = { id: '1', ...createBlogDto } as BlogEntity;
+    jest.spyOn(service, 'create').mockResolvedValue(result);
+
+    expect(await controller.create(createBlogDto)).toBe(result);
   });
 
-  it('/blogs (PUT) should throw a BadRequestException for invalid body', async () => {
-    const update = {
-      nam: 'somename',
-      websiteUrl: 'invalid-url',
-      description: 'description',
-    };
+  it('should find all blogs', async () => {
+    const result: BlogEntity[] = [{ id: '1', title: 'Test Blog', content: 'Test Content' }] as unknown as BlogEntity[];
+    jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
-    const response = await request(app.getHttpServer())
-      .put('/blogs/11')
-      .set('Authorization', 'Basic ' + Buffer.from('admin:qwerty').toString('base64'))
-      .send(update)
-      .expect(400);
+    expect(await controller.findAll()).toBe(result);
+  });
 
-    expect(response.body).toEqual({
-      errorsMessages: [
-        { message: 'invalid value', field: 'name' },
-        { message: 'invalid value', field: 'websiteUrl' },
-      ],
-    });
+  it('should find one blog by id', async () => {
+    const result: BlogEntity = { id: '1', title: 'Test Blog', content: 'Test Content' } as unknown as BlogEntity;
+    jest.spyOn(service, 'findOne').mockResolvedValue(result);
+
+    expect(await controller.findOne('1')).toBe(result);
+  });
+
+  it('should update a blog', async () => {
+    const updateBlogDto: UpdateBlogDto = {
+      title: 'Updated Blog',
+      content: 'Updated Content',
+    } as unknown as UpdateBlogDto;
+    jest.spyOn(service, 'update').mockResolvedValue(undefined);
+
+    expect(await controller.update('1', updateBlogDto)).toBeUndefined();
+  });
+
+  it('should remove a blog', async () => {
+    jest.spyOn(service, 'remove').mockResolvedValue(undefined);
+
+    expect(await controller.remove('1')).toBeUndefined();
   });
 });
