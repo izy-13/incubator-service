@@ -46,8 +46,8 @@ describe('BlogsQueryRepository', () => {
   });
 
   it('should return an empty array when no blogs exist', async () => {
-    const blogs = await blogsQueryRepository.findAllBlogs();
-    expect(blogs).toEqual([]);
+    const blogs = await blogsQueryRepository.findAllBlogs({} as any);
+    expect(blogs.items).toEqual([]);
   });
 
   it('should return all blogs', async () => {
@@ -59,9 +59,9 @@ describe('BlogsQueryRepository', () => {
       createdAt: new Date(),
     });
 
-    const blogs = await blogsQueryRepository.findAllBlogs();
-    expect(blogs).toHaveLength(1);
-    expect(blogs[0].name).toBe('Test Blog');
+    const blogs = await blogsQueryRepository.findAllBlogs({} as any);
+    expect(blogs.items).toHaveLength(1);
+    expect(blogs.items[0]?.name).toBe('Test Blog');
   });
 
   it('should return a blog by ID', async () => {

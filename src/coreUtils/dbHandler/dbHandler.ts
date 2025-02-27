@@ -7,6 +7,7 @@ export const dbConnect = async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
+  return { uri };
 };
 
 export const dbDisconnect = async () => {

@@ -1,9 +1,9 @@
 import { useContainer, validate } from 'class-validator';
-import { CreatePostDto } from '../create-post.dto';
+import { CreatePostWithBlogIdDto } from '../create-post-with-blogId.dto';
 import { BlogExistsConstraint } from '../../../../decorators/blog-exists/blog-exists.decorator';
 import { BlogsService } from '../../../blogs/blogs.service';
 
-describe('CreatePostDto', () => {
+describe('CreatePostWithBlogIdDto', () => {
   let blogsService: BlogsService;
   let blogExistsConstraint: BlogExistsConstraint;
 
@@ -23,7 +23,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should validate successfully with valid data', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = 'Valid Title';
     dto.shortDescription = 'Valid Short Description';
     dto.content = 'Valid Content';
@@ -34,7 +34,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should fail validation if title is empty', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = '';
     dto.shortDescription = 'Valid Short Description';
     dto.content = 'Valid Content';
@@ -46,7 +46,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should fail validation if shortDescription is empty', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = 'Valid Title';
     dto.shortDescription = '';
     dto.content = 'Valid Content';
@@ -58,7 +58,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should fail validation if content is empty', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = 'Valid Title';
     dto.shortDescription = 'Valid Short Description';
     dto.content = '';
@@ -70,7 +70,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should fail validation if blogId is empty', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = 'Valid Title';
     dto.shortDescription = 'Valid Short Description';
     dto.content = 'Valid Content';
@@ -82,7 +82,7 @@ describe('CreatePostDto', () => {
   });
 
   it('should trim whitespace from all string properties', async () => {
-    const dto = new CreatePostDto();
+    const dto = new CreatePostWithBlogIdDto();
     dto.title = '  Valid Title  ';
     dto.shortDescription = '  Valid Short Description  ';
     dto.content = '  Valid Content  ';

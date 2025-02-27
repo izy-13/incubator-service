@@ -1,6 +1,5 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { BlogExists } from '../../../decorators/blog-exists/blog-exists.decorator';
 
 export class CreatePostDto {
   @IsNotEmpty()
@@ -23,10 +22,4 @@ export class CreatePostDto {
   @MinLength(1)
   @MaxLength(1000)
   content: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @Transform(({ value }: { value: string }) => value.trim())
-  @BlogExists()
-  blogId: string;
 }

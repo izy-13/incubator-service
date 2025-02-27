@@ -8,15 +8,18 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { routesConstants, transformValidationFactory } from '../../coreUtils';
 import { PostEntity } from './entities/post.entity';
 import { ObjectIdValidationPipe } from '../../pipes';
+import { FindAllPostsQueryDto } from './dto/find-all-posts-query.dto';
+import { PaginatedResponse } from '../../types';
+import { CreatePostWithBlogIdDto } from './dto/create-post-with-blogId.dto';
 
 const { POSTS } = routesConstants;
 
@@ -27,13 +30,13 @@ export class PostsController {
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
+  create(@Body() createPostDto: CreatePostWithBlogIdDto): Promise<PostEntity> {
     return this.postsService.create(createPostDto);
   }
 
   @Get()
-  findAll(): Promise<PostEntity[]> {
-    return this.postsService.findAll();
+  findAll(@Query() queryParams: FindAllPostsQueryDto): Promise<PaginatedResponse<PostEntity>> {
+    return this.postsService.findAll(queryParams);
   }
 
   @Get(':id')

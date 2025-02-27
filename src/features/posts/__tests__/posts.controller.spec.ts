@@ -1,9 +1,10 @@
 import { PostsController } from '../posts.controller';
 import { PostsService } from '../posts.service';
-import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
+import { PaginatedResponse } from '../../../types';
 
 describe('PostsController', () => {
   let controller: PostsController;
@@ -31,7 +32,10 @@ describe('PostsController', () => {
   });
 
   it('should create a post', async () => {
-    const createPostDto: CreatePostDto = { title: 'Test Post', content: 'Test Content' } as CreatePostDto;
+    const createPostDto: CreatePostWithBlogIdDto = {
+      title: 'Test Post',
+      content: 'Test Content',
+    } as CreatePostWithBlogIdDto;
     const result: PostEntity = { id: '1', ...createPostDto } as PostEntity;
     jest.spyOn(service, 'create').mockResolvedValue(result);
 
@@ -39,10 +43,12 @@ describe('PostsController', () => {
   });
 
   it('should find all posts', async () => {
-    const result: PostEntity[] = [{ id: '1', title: 'Test Post', content: 'Test Content' }] as PostEntity[];
+    const result = {
+      items: [{ id: '1', title: 'Test Post', content: 'Test Content' }],
+    } as PaginatedResponse<PostEntity>;
     jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
-    expect(await controller.findAll()).toBe(result);
+    expect(await controller.findAll({} as any)).toBe(result);
   });
 
   it('should find one post by id', async () => {

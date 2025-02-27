@@ -7,3 +7,5 @@ export class PostEntity {
   blogName: string;
   createdAt: string;
 }
+
+export type PostSortBy = keyof Omit<PostEntity, 'id'>;

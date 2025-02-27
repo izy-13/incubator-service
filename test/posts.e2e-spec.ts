@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import { dbConnect, dbDisconnect } from '../src/coreUtils';
 import { AppModule } from '../src/app.module';
 
+// TODO repair this test
 // const createBlogDto = {
 //   name: 'New Blog',
 //   description: 'Some content',
@@ -29,6 +30,7 @@ describe('PostsController (e2e)', () => {
   // });
 
   beforeAll(async () => {
+    // TODO useContainer from class-validator
     await dbConnect();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -47,6 +49,7 @@ describe('PostsController (e2e)', () => {
   });
 
   it('should create a post', async () => {
+    // const createBlog =
     const response = await request(app.getHttpServer())
       .post('/posts')
       .send({ ...createPostDto, blogId: '67b99e384d6144aa499cba88' })

@@ -2,18 +2,19 @@ import { InjectModel } from '@nestjs/mongoose';
 import { PostDb } from '../schemas/post.schema';
 import { Model, Types } from 'mongoose';
 import { UpdatePostDto } from '../dto/update-post.dto';
-import { NotFoundException } from '@nestjs/common';
-import { CreatePostDto } from '../dto/create-post.dto';
+import { forwardRef, Inject, NotFoundException } from '@nestjs/common';
 import { PostEntity } from '../entities/post.entity';
+import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
 import { BlogsService } from '../../blogs/blogs.service';
 
 export class PostsRepository {
   constructor(
+    @Inject(forwardRef(() => BlogsService))
     private readonly blogsService: BlogsService,
     @InjectModel(PostDb.name) private readonly postModel: Model<PostDb>,
   ) {}
 
-  async createPost(createPostDto: CreatePostDto): Promise<PostEntity> {
+  async createPost(createPostDto: CreatePostWithBlogIdDto): Promise<PostEntity> {
     const blog = await this.blogsService.findOne(createPostDto.blogId);
 
     const newPost: PostDb = {

@@ -6,8 +6,8 @@ import { PostDb } from '../../schemas/post.schema';
 import { NotFoundException } from '@nestjs/common';
 import { dbConnect, dbDisconnect } from '../../../../coreUtils';
 import { BlogsService } from '../../../blogs/blogs.service';
-import { CreatePostDto } from '../../dto/create-post.dto';
 import { UpdatePostDto } from '../../dto/update-post.dto';
+import { CreatePostWithBlogIdDto } from '../../dto/create-post-with-blogId.dto';
 
 describe('PostsRepository', () => {
   let postsRepository: PostsRepository;
@@ -54,7 +54,7 @@ describe('PostsRepository', () => {
   });
 
   it('should create a post', async () => {
-    const createPostDto: CreatePostDto = {
+    const createPostDto: CreatePostWithBlogIdDto = {
       title: 'New Post',
       content: 'Some content',
       shortDescription: 'Short description',

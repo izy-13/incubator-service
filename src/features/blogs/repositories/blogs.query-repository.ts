@@ -3,15 +3,29 @@ import { Blog } from '../schemas/blog.schema';
 import { Model } from 'mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogEntity } from '../entities/blog.entity';
+import { FindAllBlogsQueryDto } from '../dto/find-all-blogs-query.dto';
+import { PaginatedResponse } from '../../../types';
+import { formatPaginatedResponse } from '../../../coreUtils';
 
 @Injectable()
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private readonly blogModel: Model<Blog>) {}
 
-  async findAllBlogs(): Promise<BlogEntity[]> {
-    const blogs = await this.blogModel.find().exec();
+  async findAllBlogs(queryParams: FindAllBlogsQueryDto): Promise<PaginatedResponse<BlogEntity>> {
+    const { pageNumber, pageSize, searchNameTerm, sortBy, sortDirection } = queryParams;
+
+    const filter = searchNameTerm ? { name: { $regex: searchNameTerm, $options: 'i' } } : {};
+    const totalCount = await this.blogModel.countDocuments(filter).exec();
+
+    const blogs = await this.blogModel
+      .find(filter)
+      .sort({ [sortBy]: sortDirection === 'asc' ? 1 : -1, _id: sortDirection === 'asc' ? 1 : -1 })
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize)
+      .exec();
+
     // TODO adjust data transform for avoid copycode
-    return blogs.map(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
+    const items: BlogEntity[] = blogs.map(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
       id: _id.toJSON(),
       name,
       createdAt: new Date(createdAt || '').toISOString(),
@@ -19,6 +33,8 @@ export class BlogsQueryRepository {
       websiteUrl,
       isMembership,
     }));
+
+    return formatPaginatedResponse<BlogEntity>({ page: pageNumber, items, pageSize, totalCount });
   }
 
   async findBlogById(id: string): Promise<BlogEntity> {

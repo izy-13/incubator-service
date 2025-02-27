@@ -1,21 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
 import mongoose from 'mongoose';
+import { dbConnect, dbDisconnect } from '../src/coreUtils';
+import { BlogEntity } from '../src/features/blogs/entities/blog.entity';
+import { AppModule } from '../src/app.module';
 
-interface BlogResponse {
-  id: string;
-  name: string;
-  description: string;
-  websiteUrl: string;
-}
+const createBlogDto = {
+  name: 'New Blog',
+  description: 'Some content',
+  websiteUrl: 'www.google.com',
+};
 
 describe('BlogsController (e2e)', () => {
   let app: INestApplication;
   const authHeader = { Authorization: 'Basic ' + Buffer.from('admin:qwerty').toString('base64') };
 
   beforeAll(async () => {
+    const { uri } = await dbConnect();
+    // env.MONGO_URI = '123';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -25,16 +29,12 @@ describe('BlogsController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await dbDisconnect();
+
     await app.close();
   });
 
   it('should create a blog', async () => {
-    const createBlogDto = {
-      name: 'New Blog',
-      description: 'Some content',
-      websiteUrl: 'www.google.com',
-    };
-
     const response = await request(app.getHttpServer())
       .post('/blogs')
       .send(createBlogDto)
@@ -51,34 +51,22 @@ describe('BlogsController (e2e)', () => {
   it('should return all blogs', async () => {
     const response = await request(app.getHttpServer()).get('/blogs').expect(HttpStatus.OK);
 
-    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body?.items).toBeInstanceOf(Array);
   });
 
   it('should return a blog by id', async () => {
-    const createBlogDto = {
-      name: 'New Blog',
-      description: 'Some content',
-      websiteUrl: 'www.google.com',
-    };
-
     const createResponse = await request(app.getHttpServer()).post('/blogs').send(createBlogDto).set(authHeader);
 
-    const blogId: string = (createResponse.body as BlogResponse).id;
+    const blogId: string = (createResponse.body as BlogEntity).id;
 
     const response = await request(app.getHttpServer()).get(`/blogs/${blogId}`).expect(HttpStatus.OK);
     expect(response.body).toHaveProperty('id', blogId);
   });
 
   it('should update a blog', async () => {
-    const createBlogDto = {
-      name: 'New Blog',
-      description: 'Some content',
-      websiteUrl: 'www.google.com',
-    };
-
     const createResponse = await request(app.getHttpServer()).post('/blogs').send(createBlogDto).set(authHeader);
 
-    const blogId: string = (createResponse.body as BlogResponse).id;
+    const blogId: string = (createResponse.body as BlogEntity).id;
 
     const updateBlogDto = {
       name: 'Updated Blog',
@@ -94,15 +82,9 @@ describe('BlogsController (e2e)', () => {
   });
 
   it('should delete a blog', async () => {
-    const createBlogDto = {
-      name: 'New Blog',
-      description: 'Some content',
-      websiteUrl: 'www.google.com',
-    };
-
     const createResponse = await request(app.getHttpServer()).post('/blogs').send(createBlogDto).set(authHeader);
 
-    const blogId: string = (createResponse.body as BlogResponse).id;
+    const blogId: string = (createResponse.body as BlogEntity).id;
 
     await request(app.getHttpServer()).delete(`/blogs/${blogId}`).set(authHeader).expect(HttpStatus.NO_CONTENT);
   });

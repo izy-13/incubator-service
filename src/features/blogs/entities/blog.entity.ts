@@ -6,3 +6,5 @@ export class BlogEntity {
   createdAt: string;
   isMembership: boolean;
 }
+
+export type BlogSortBy = keyof Omit<BlogEntity, 'id'>;

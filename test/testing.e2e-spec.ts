@@ -1,14 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule as TestingModuleNest } from '@nestjs/testing';
 import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
+import { dbConnect, dbDisconnect } from '../src/coreUtils';
+import { MongooseModule } from '@nestjs/mongoose';
+import { TestingModule } from '../src/features/testing/testing.module';
 
 describe('TestingController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+    const { uri } = await dbConnect();
+
+    const moduleFixture: TestingModuleNest = await Test.createTestingModule({
+      imports: [MongooseModule.forRoot(uri), TestingModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -16,6 +20,8 @@ describe('TestingController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await dbDisconnect();
+
     await app.close();
   });
 

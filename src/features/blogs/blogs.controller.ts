@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -17,8 +18,13 @@ import { UpdateBlogDto } from './dto/update-blog.dto';
 import { routesConstants, transformValidationFactory } from '../../coreUtils';
 import { BlogEntity } from './entities/blog.entity';
 import { ObjectIdValidationPipe } from '../../pipes';
+import { FindAllBlogsQueryDto } from './dto/find-all-blogs-query.dto';
+import { PaginatedResponse } from '../../types';
+import { CreatePostDto } from '../posts/dto/create-post.dto';
+import { PostEntity } from '../posts/entities/post.entity';
+import { FindAllPostsQueryDto } from '../posts/dto/find-all-posts-query.dto';
 
-const { BLOGS } = routesConstants;
+const { BLOGS, POSTS } = routesConstants;
 
 @Controller(BLOGS)
 export class BlogsController {
@@ -32,10 +38,11 @@ export class BlogsController {
   }
 
   @Get()
-  findAll(): Promise<BlogEntity[]> {
-    return this.blogsService.findAll();
+  findAll(@Query() queryParams: FindAllBlogsQueryDto): Promise<PaginatedResponse<BlogEntity>> {
+    return this.blogsService.findAll(queryParams);
   }
 
+  // TODO can be refactoed by directly get data from repo (DAL)
   @Get(':id')
   findOne(@Param('id', ObjectIdValidationPipe) id: string): Promise<BlogEntity> {
     return this.blogsService.findOne(id);
@@ -52,5 +59,23 @@ export class BlogsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
     return this.blogsService.remove(id);
+  }
+
+  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @Post(`:blogId/${POSTS}`)
+  @HttpCode(HttpStatus.CREATED)
+  createPost(
+    @Param('blogId', ObjectIdValidationPipe) blogId: string,
+    @Body() createPostDto: CreatePostDto,
+  ): Promise<PostEntity> {
+    return this.blogsService.createPost(blogId, createPostDto);
+  }
+
+  @Get(`:blogId/${POSTS}`)
+  findAllPosts(
+    @Param('blogId', ObjectIdValidationPipe) blogId: string,
+    @Query() queryParams: FindAllPostsQueryDto,
+  ): Promise<PaginatedResponse<PostEntity>> {
+    return this.blogsService.findAllPosts(blogId, queryParams);
   }
 }

@@ -47,8 +47,8 @@ describe('PostsQueryRepository', () => {
   });
 
   it('should return an empty array when no posts exist', async () => {
-    const posts = await postsQueryRepository.findAllPosts();
-    expect(posts).toEqual([]);
+    const posts = await postsQueryRepository.findAllPosts({} as any);
+    expect(posts.items).toEqual([]);
   });
 
   it('should return all posts', async () => {
@@ -61,9 +61,9 @@ describe('PostsQueryRepository', () => {
       blogName: 'Test Blog',
     });
 
-    const posts = await postsQueryRepository.findAllPosts();
-    expect(posts).toHaveLength(1);
-    expect(posts[0].title).toBe('Test Post');
+    const posts = await postsQueryRepository.findAllPosts({} as any);
+    expect(posts.items).toHaveLength(1);
+    expect(posts.items[0].title).toBe('Test Post');
   });
 
   it('should return a post by ID', async () => {

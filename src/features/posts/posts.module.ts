@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
 import { BasicAuthMiddleware } from '../../middlewares';
@@ -15,7 +15,7 @@ const { POSTS } = routesConstants;
   controllers: [PostsController],
   providers: [PostsService, PostsQueryRepository, PostsRepository, BlogExistsConstraint],
   exports: [PostsService],
-  imports: [MongooseModule.forFeature([{ name: PostDb.name, schema: PostSchema }]), BlogsModule],
+  imports: [MongooseModule.forFeature([{ name: PostDb.name, schema: PostSchema }]), forwardRef(() => BlogsModule)],
 })
 export class PostsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

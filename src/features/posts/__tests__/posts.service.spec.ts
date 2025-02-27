@@ -1,9 +1,10 @@
 import { PostsService } from '../posts.service';
 import { PostsQueryRepository, PostsRepository } from '../repositories';
-import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { NotFoundException } from '@nestjs/common';
+import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
+import { PaginatedResponse } from '../../../types';
 
 describe('PostsService', () => {
   let service: PostsService;
@@ -22,7 +23,7 @@ describe('PostsService', () => {
   });
 
   it('should create a post', async () => {
-    const createPostDto: CreatePostDto = { title: 'Test Post', content: 'Test Content' } as CreatePostDto;
+    const createPostDto = { title: 'Test Post', content: 'Test Content' } as CreatePostWithBlogIdDto;
     const result: PostEntity = { id: '1', ...createPostDto } as PostEntity;
     jest.spyOn(repository, 'createPost').mockResolvedValue(result);
 
@@ -30,10 +31,12 @@ describe('PostsService', () => {
   });
 
   it('should find all posts', async () => {
-    const result: PostEntity[] = [{ id: '1', title: 'Test Post', content: 'Test Content' }] as PostEntity[];
+    const result = {
+      items: [{ id: '1', title: 'Test Post', content: 'Test Content' }],
+    } as PaginatedResponse<PostEntity>;
     jest.spyOn(queryRepository, 'findAllPosts').mockResolvedValue(result);
 
-    expect(await service.findAll()).toBe(result);
+    expect(await service.findAll({} as any)).toBe(result);
   });
 
   it('should find one post by id', async () => {
