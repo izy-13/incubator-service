@@ -1,26 +1,56 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, UpdateUserDto } from './dto';
+import { UserEntity } from './entities/user.entity';
+import { UsersQueryRepository, UsersRepository } from './repositories';
+import { FindAllUsersQueryDto } from './dto/find-all-users-query.dto';
+import { PaginatedResponse } from '../../types';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    private readonly repository: UsersRepository,
+    private readonly queryRepository: UsersQueryRepository,
+  ) {}
+
+  create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    return this.repository.createUser(createUserDto);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  findAll(queryParams: FindAllUsersQueryDto): Promise<PaginatedResponse<UserEntity>> {
+    const defaultParams = new FindAllUsersQueryDto();
+    const {
+      pageNumber = defaultParams.pageNumber,
+      sortDirection = defaultParams.sortDirection,
+      sortBy = defaultParams.sortBy,
+      searchLoginTerm,
+      searchEmailTerm,
+      pageSize = defaultParams.pageSize,
+    } = queryParams;
+
+    return this.queryRepository.findAllUsers({
+      pageSize,
+      sortDirection,
+      pageNumber,
+      sortBy,
+      searchLoginTerm,
+      searchEmailTerm,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  findOne(id: string): Promise<UserEntity> {
+    return this.queryRepository.findUserById(id);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    console.log(updateUserDto);
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(id: string) {
+    return this.repository.deleteUser(id);
+  }
+
+  clearAll() {
+    return this.repository.deleteAllUsers();
   }
 }

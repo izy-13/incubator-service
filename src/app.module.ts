@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { BlogsModule, PostsModule, TestingModule, UsersModule } from './features';
+import { AuthModule, BlogsModule, PostsModule, TestingModule, UsersModule } from './features';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -9,8 +9,9 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forRoot(process.env.MONGO_URI || `mongodb://${process.env.MONGO_DB_PORT}/nest`),
     PostsModule,
     BlogsModule,
-    TestingModule,
     UsersModule,
+    AuthModule,
+    TestingModule,
   ],
 })
 export class AppModule {}
