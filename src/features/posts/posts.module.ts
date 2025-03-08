@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PostDb, PostSchema } from './schemas/post.schema';
 import { PostsQueryRepository, PostsRepository } from './repositories';
 import { BlogExistsConstraint } from '../../decorators';
+import { CommentsModule } from '../comments/comments.module';
 
 const { POSTS } = routesConstants;
 
@@ -15,7 +16,11 @@ const { POSTS } = routesConstants;
   controllers: [PostsController],
   providers: [PostsService, PostsQueryRepository, PostsRepository, BlogExistsConstraint],
   exports: [PostsService],
-  imports: [MongooseModule.forFeature([{ name: PostDb.name, schema: PostSchema }]), forwardRef(() => BlogsModule)],
+  imports: [
+    MongooseModule.forFeature([{ name: PostDb.name, schema: PostSchema }]),
+    forwardRef(() => BlogsModule),
+    CommentsModule,
+  ],
 })
 export class PostsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

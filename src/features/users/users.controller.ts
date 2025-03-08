@@ -19,6 +19,7 @@ import { UserEntity } from './entities/user.entity';
 import { PaginatedResponse } from '../../types';
 import { ObjectIdValidationPipe } from '../../pipes';
 import { FindAllUsersQueryDto } from './dto/find-all-users-query.dto';
+import { PublicApi } from '../../decorators';
 
 const { USERS } = routesConstants;
 
@@ -26,6 +27,7 @@ const { USERS } = routesConstants;
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @PublicApi()
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -33,22 +35,26 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @PublicApi()
   @Get()
   findAll(@Query() queryParams: FindAllUsersQueryDto): Promise<PaginatedResponse<UserEntity>> {
     return this.usersService.findAll(queryParams);
   }
 
+  @PublicApi()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
     return this.usersService.remove(id);
   }
 
+  @PublicApi()
   @Get(':id')
   findOne(@Param('id') id: string): Promise<UserEntity> {
     return this.usersService.findOne(id);
   }
 
+  @PublicApi()
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);

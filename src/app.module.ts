@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, BlogsModule, PostsModule, TestingModule, UsersModule } from './features';
+import { AuthModule, BlogsModule, CommentsModule, PostsModule, TestingModule, UsersModule } from './features';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -12,6 +12,8 @@ import { MongooseModule } from '@nestjs/mongoose';
     UsersModule,
     AuthModule,
     TestingModule,
+    CommentsModule,
   ],
+  // providers: [PublicApi],
 })
 export class AppModule {}

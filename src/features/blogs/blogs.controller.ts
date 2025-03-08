@@ -23,6 +23,7 @@ import { PaginatedResponse } from '../../types';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { PostEntity } from '../posts/entities/post.entity';
 import { FindAllPostsQueryDto } from '../posts/dto/find-all-posts-query.dto';
+import { PublicApi } from '../../decorators';
 
 const { BLOGS, POSTS } = routesConstants;
 
@@ -30,6 +31,7 @@ const { BLOGS, POSTS } = routesConstants;
 export class BlogsController {
   constructor(private readonly blogsService: BlogsService) {}
 
+  @PublicApi()
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -37,17 +39,20 @@ export class BlogsController {
     return this.blogsService.create(createBlogDto);
   }
 
+  @PublicApi()
   @Get()
   findAll(@Query() queryParams: FindAllBlogsQueryDto): Promise<PaginatedResponse<BlogEntity>> {
     return this.blogsService.findAll(queryParams);
   }
 
   // TODO can be refactoed by directly get data from repo (DAL)
+  @PublicApi()
   @Get(':id')
   findOne(@Param('id', ObjectIdValidationPipe) id: string): Promise<BlogEntity> {
     return this.blogsService.findOne(id);
   }
 
+  @PublicApi()
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -55,12 +60,14 @@ export class BlogsController {
     return this.blogsService.update(id, updateBlogDto);
   }
 
+  @PublicApi()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
     return this.blogsService.remove(id);
   }
 
+  @PublicApi()
   @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
   @Post(`:blogId/${POSTS}`)
   @HttpCode(HttpStatus.CREATED)
@@ -71,6 +78,7 @@ export class BlogsController {
     return this.blogsService.createPost(blogId, createPostDto);
   }
 
+  @PublicApi()
   @Get(`:blogId/${POSTS}`)
   findAllPosts(
     @Param('blogId', ObjectIdValidationPipe) blogId: string,
