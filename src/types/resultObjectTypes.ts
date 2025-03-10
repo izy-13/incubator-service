@@ -10,6 +10,7 @@ export enum ResultStatus {
   FORBIDDEN_ERROR = 'FORBIDDEN_ERROR',
   NOT_FOUND = 'NOT_FOUND',
   SUCCESS = 'SUCCESS',
+  BAD_REQUEST = 'BAD_REQUEST',
 }
 
 export type Result<T = null> = {

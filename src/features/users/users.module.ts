@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './schemas/user.schema';
@@ -7,13 +7,14 @@ import { BasicAuthMiddleware } from '../../middlewares';
 import { UsersQueryRepository, UsersRepository } from './repositories';
 import { routesConstants } from '../../coreUtils';
 import { UniqueValidator } from '../../decorators';
+import { AuthModule } from '../auth/auth.module';
 
 const { USERS } = routesConstants;
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), forwardRef(() => AuthModule)],
   controllers: [UsersController],
-  exports: [UsersQueryRepository, UsersService],
+  exports: [UsersQueryRepository, UsersRepository, UsersService],
   providers: [UsersService, UsersQueryRepository, UsersRepository, UniqueValidator],
 })
 export class UsersModule implements NestModule {

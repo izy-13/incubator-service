@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../schemas/user.schema';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { UserEntity } from '../entities/user.entity';
 import { FindAllUsersQueryDto } from '../dto/find-all-users-query.dto';
 import { PaginatedResponse } from '../../../types';
@@ -38,11 +38,23 @@ export class UsersQueryRepository {
     return formatPaginatedResponse<UserEntity>({ page: pageNumber, items, pageSize, totalCount });
   }
 
-  async findUserById(id: string): Promise<UserEntity> {
-    const user = await this.userModel.findOne({ _id: id }).exec();
+  async findUserWithoutException(filter: FilterQuery<User>): Promise<UserEntity | null> {
+    const user = await this.userModel.findOne(filter).exec();
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      return null;
+    }
+
+    const { _id, email, login, createdAt } = user;
+
+    return { id: _id.toJSON(), email, login, createdAt: new Date(createdAt || '').toISOString() };
+  }
+
+  async findUser(filter: FilterQuery<User>): Promise<UserEntity> {
+    const user = await this.userModel.findOne(filter).exec();
+
+    if (!user) {
+      throw new NotFoundException(`User not found`);
     }
 
     const { _id, email, login, createdAt } = user;

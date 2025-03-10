@@ -8,4 +8,7 @@ export const routesConstants = {
   LOGIN: 'login',
   ME: 'me',
   COMMENTS: 'comments',
+  REGISTRATION_CONFIRM: 'registration-confirmation',
+  REGISTRATION_EMAIL_RESEND: 'registration-email-resending',
+  REGISTRATION: 'registration',
 };

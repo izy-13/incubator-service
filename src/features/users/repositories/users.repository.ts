@@ -23,7 +23,7 @@ export class UsersRepository {
     const newUser = await this.userModel.create({ email, login, passwordSalt, passwordHash });
 
     if (newUser._id) {
-      return this.queryRepository.findUserById(newUser._id.toJSON());
+      return this.queryRepository.findUser({ _id: newUser._id.toJSON() });
     } else {
       throw new Error('User was not created');
     }
