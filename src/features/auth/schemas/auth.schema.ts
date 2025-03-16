@@ -3,10 +3,14 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type AuthDocument = HydratedDocument<Auth>;
 
+// TODO naming Entity instead of Schema
 @Schema({ timestamps: { createdAt: true, updatedAt: false }, versionKey: false })
 export class Auth {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   userId: mongoose.Types.ObjectId;
+
+  @Prop()
+  refreshToken: string;
 
   @Prop({ required: true, unique: true })
   code: string;

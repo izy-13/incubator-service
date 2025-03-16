@@ -9,3 +9,4 @@ export * from './constants/auth.constants';
 export * from './createResultFactory/createResultFactory';
 export * from './formResponse/formResponse';
 export * from './emailManager/emailManager';
+export * from './testUtils/testUtils';

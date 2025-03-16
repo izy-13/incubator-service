@@ -7,6 +7,7 @@ import {
 import { BlogsService } from '../../features/blogs/blogs.service';
 import { Injectable } from '@nestjs/common';
 
+// TODO Should be incapsulated inside blog module
 @ValidatorConstraint({ async: true })
 @Injectable()
 export class BlogExistsConstraint implements ValidatorConstraintInterface {

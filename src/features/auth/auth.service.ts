@@ -19,7 +19,24 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async create(createAuthDto: CreateAuthDto): Promise<{ accessToken: string }> {
+  async getTokens(userId: string, loginOrEmail: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync({ sub: userId, loginOrEmail }, { secret: process.env.JWT_SECRET, expiresIn: '10s' }),
+      this.jwtService.signAsync(
+        { sub: userId, loginOrEmail },
+        { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '20s' },
+      ),
+    ]);
+
+    await this.repository.updateAuthInfo({ userId }, { refreshToken });
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async create(createAuthDto: CreateAuthDto): Promise<{ accessToken: string; refreshToken: string }> {
     const { loginOrEmail, password } = createAuthDto;
     const user = await this.usersQueryRepository.findUserByLoginOrEmail(loginOrEmail, password);
 
@@ -27,10 +44,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = { sub: user.id, loginOrEmail: user.login || user.email };
-    return {
-      accessToken: await this.jwtService.signAsync(payload),
-    };
+    return await this.getTokens(user.id, user.login || user.email);
   }
 
   async findMe(id: string): Promise<MeEntity> {
@@ -54,16 +68,13 @@ export class AuthService {
     const user = await this.usersRepository.createUser(registrationDto);
     const code = await this.repository.registerUser(user.id);
 
-    if (!code) {
-      return errorResult(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
-    }
-
-    await emailManager.sendConfirmationEmail(user.email, 'Confirm registration', code);
+    emailManager.sendConfirmationEmail(user.email, 'Confirm registration', code).catch((e) => console.error(e));
     return successResult(ResultStatus.SUCCESS, code);
   }
 
   async resendEmail(resendEmailDto: ResendEmailDto): PromiseResult<string> {
     const { email } = resendEmailDto;
+    // TODO not using queryRepository inside command service
     const user = await this.usersQueryRepository.findUserWithoutException({ email: email });
     const authInfo = await this.queryRepository.findAuthInfo({ userId: user?.id });
 
@@ -79,5 +90,34 @@ export class AuthService {
 
   async clearAll() {
     await this.repository.deleteAll();
+  }
+
+  async refreshToken(refreshToken: string): PromiseResult<{ accessToken: string; refreshToken: string }> {
+    const authInfo = await this.queryRepository.findAuthInfo({ refreshToken });
+
+    if (!authInfo) {
+      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+    }
+
+    const { userId } = authInfo;
+    const user = await this.usersQueryRepository.findUser({ _id: userId });
+
+    if (!user) {
+      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+    }
+
+    const result = await this.getTokens(user.id, user.login || user.email);
+    await this.repository.updateAuthInfo({ refreshToken }, { refreshToken: result.refreshToken });
+    return successResult(ResultStatus.SUCCESS, result);
+  }
+
+  async logout(refreshToken: string): PromiseResult<boolean> {
+    const result = await this.repository.updateAuthInfo({ refreshToken }, { refreshToken: '' });
+
+    if (!result) {
+      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+    }
+
+    return successResult(ResultStatus.SUCCESS, true);
   }
 }

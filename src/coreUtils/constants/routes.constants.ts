@@ -11,4 +11,6 @@ export const routesConstants = {
   REGISTRATION_CONFIRM: 'registration-confirmation',
   REGISTRATION_EMAIL_RESEND: 'registration-email-resending',
   REGISTRATION: 'registration',
+  LOGOUT: 'logout',
+  REFRESH_TOKEN: 'refresh-token',
 };

@@ -1,5 +1,6 @@
 import { PostsService } from '../posts.service';
 import { PostsQueryRepository, PostsRepository } from '../repositories';
+import { CommentsService } from '../../comments/comments.service';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { NotFoundException } from '@nestjs/common';
@@ -10,16 +11,18 @@ describe('PostsService', () => {
   let service: PostsService;
   let queryRepository: PostsQueryRepository;
   let repository: PostsRepository;
+  let commentService: CommentsService;
 
   beforeEach(() => {
     queryRepository = { findAllPosts: jest.fn(), findPostById: jest.fn() } as unknown as PostsQueryRepository;
+    commentService = { clearAll: jest.fn() } as unknown as CommentsService;
     repository = {
       createPost: jest.fn(),
       updatePost: jest.fn(),
       deletePost: jest.fn(),
       deleteAllPosts: jest.fn(),
     } as unknown as PostsRepository;
-    service = new PostsService(queryRepository, repository);
+    service = new PostsService(queryRepository, repository, commentService);
   });
 
   it('should create a post', async () => {

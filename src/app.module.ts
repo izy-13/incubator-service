@@ -5,8 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI || `mongodb://${process.env.MONGO_DB_PORT}/nest`),
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRootAsync({
+      useFactory: () => {
+        const isTestEnv = process.env.NODE_ENV === 'test';
+        return { uri: `mongodb://${process.env.MONGO_DB_PORT}/${isTestEnv ? 'nestTest' : 'nest'}` };
+      },
+    }),
     PostsModule,
     BlogsModule,
     UsersModule,
@@ -14,6 +19,5 @@ import { MongooseModule } from '@nestjs/mongoose';
     TestingModule,
     CommentsModule,
   ],
-  // providers: [PublicApi],
 })
 export class AppModule {}

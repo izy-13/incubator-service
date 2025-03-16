@@ -4,6 +4,7 @@ import { IsUnique } from '../../../decorators';
 import { User } from '../../users/schemas/user.schema';
 import { RegisterAuthValidator } from '../decorators';
 
+// TODO Mostly primitives checks
 export class RegistrationAuthDto {
   @IsNotEmpty()
   @IsString()

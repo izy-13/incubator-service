@@ -1,5 +1,5 @@
 import { Result, ResultStatus } from '../../types';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 export function formResponse<T>(result: Result<T>): T {
   switch (result.status) {
@@ -12,6 +12,8 @@ export function formResponse<T>(result: Result<T>): T {
       throw new NotFoundException(result.errorMessage);
     case ResultStatus.BAD_REQUEST:
       throw new BadRequestException({ errorsMessages: result.errorMessage });
+    case ResultStatus.UNAUTHORIZED:
+      throw new UnauthorizedException(result.errorMessage);
     default:
       return result.data;
   }

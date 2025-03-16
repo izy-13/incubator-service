@@ -1,28 +1,17 @@
-import { Test, TestingModule as TestingModuleNest } from '@nestjs/testing';
 import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { dbConnect, dbDisconnect } from '../src/coreUtils';
-import { MongooseModule } from '@nestjs/mongoose';
-import { TestingModule } from '../src/features/testing/testing.module';
+import { closeE2eApp, initE2eApp } from '../src/coreUtils';
+import { AppModule } from '../src/app.module';
 
 describe('TestingController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const { uri } = await dbConnect();
-
-    const moduleFixture: TestingModuleNest = await Test.createTestingModule({
-      imports: [MongooseModule.forRoot(uri), TestingModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await initE2eApp(AppModule);
   });
 
   afterAll(async () => {
-    await dbDisconnect();
-
-    await app.close();
+    await closeE2eApp(app);
   });
 
   it('should remove all data and return no content status', async () => {

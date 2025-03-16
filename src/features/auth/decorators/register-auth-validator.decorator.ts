@@ -5,6 +5,7 @@ import { AuthQueryRepository } from '../repositories';
 import { UsersQueryRepository } from '../../users/repositories';
 import { isBefore } from 'date-fns/isBefore';
 
+// TODO better to be in BLL
 @ValidatorConstraint({ async: true })
 @Injectable()
 export class RegisterAuthValidatorConstraint {
