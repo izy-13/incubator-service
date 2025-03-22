@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       useFactory: () => {
+        // TODO mb another cluster for vercel
         const isTestEnv = process.env.NODE_ENV === 'test';
         return { uri: `mongodb://${process.env.MONGO_DB_PORT}/${isTestEnv ? 'nestTest' : 'nest'}` };
       },

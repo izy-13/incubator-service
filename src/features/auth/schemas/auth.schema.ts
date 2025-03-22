@@ -9,6 +9,7 @@ export class Auth {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   userId: mongoose.Types.ObjectId;
 
+  // TODO black list token or add expiration date and check because old tokens can be used
   @Prop()
   refreshToken: string;
 
