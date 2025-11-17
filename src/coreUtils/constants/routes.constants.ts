@@ -13,4 +13,6 @@ export const routesConstants = {
   REGISTRATION: 'registration',
   LOGOUT: 'logout',
   REFRESH_TOKEN: 'refresh-token',
+  SECURITY: 'security',
+  DEVICES: 'devices',
 };

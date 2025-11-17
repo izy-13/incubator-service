@@ -1,6 +1,14 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, BlogsModule, CommentsModule, PostsModule, TestingModule, UsersModule } from './features';
+import {
+  BlogsModule,
+  CommentsModule,
+  PostsModule,
+  RequestLoggerMiddleware,
+  RequestLogModule,
+  TestingModule,
+  UsersModule,
+} from './features';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
@@ -16,9 +24,13 @@ import { MongooseModule } from '@nestjs/mongoose';
     PostsModule,
     BlogsModule,
     UsersModule,
-    AuthModule,
     TestingModule,
     CommentsModule,
+    RequestLogModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggerMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}
