@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Auth, AuthSchema } from './schemas/auth.schema';
+import { AuthEntity, AuthSchema } from './schemas/auth.schema';
 import { AuthQueryRepository, AuthRepository } from './repositories';
 import { CodeAuthExistsConstraint, RegisterAuthValidatorConstraint, ResendAuthValidatorConstraint } from './decorators';
 import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
@@ -15,7 +15,7 @@ import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
   controllers: [AuthController],
   exports: [AuthRepository, AuthService],
   imports: [
-    MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
+    MongooseModule.forFeature([{ name: AuthEntity.name, schema: AuthSchema }]),
     JwtModule.register({}),
     forwardRef(() => UsersModule),
   ],

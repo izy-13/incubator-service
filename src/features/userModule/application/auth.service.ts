@@ -18,13 +18,20 @@ export class AuthService {
   async getTokens(userId: string, loginOrEmail: string, metadata?: object) {
     const deviceId = uuidv4();
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync({ sub: userId, loginOrEmail }, { secret: process.env.JWT_SECRET, expiresIn: '10s' }),
+      this.jwtService.signAsync(
+        { sub: userId, loginOrEmail },
+        { secret: process.env.JWT_SECRET, expiresIn: '10s' },
+      ),
       this.jwtService.signAsync(
         { sub: userId, loginOrEmail, deviceId },
         { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '20s' },
       ),
     ]);
-    const deviceSecurityRecord = { deviceId, lastActiveDate: new Date().toISOString(), ...metadata };
+    const deviceSecurityRecord = {
+      deviceId,
+      lastActiveDate: new Date().toISOString(),
+      ...metadata,
+    };
     console.log(accessToken, refreshToken, deviceSecurityRecord);
     await this.usersRepository.updateAuthInfo({ _id: userId }, { refreshToken });
 
@@ -34,7 +41,10 @@ export class AuthService {
     };
   }
 
-  async create(createAuthDto: CreateAuthDto, metadata: object): Promise<{ accessToken: string; refreshToken: string }> {
+  async create(
+    createAuthDto: CreateAuthDto,
+    metadata: object,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const { loginOrEmail, password } = createAuthDto;
     const user = await this.usersQueryRepository.findUserByLoginOrEmail(loginOrEmail, password);
 
@@ -46,7 +56,7 @@ export class AuthService {
   }
 
   async findMe(id: string): Promise<MeViewModelType> {
-    const user = await this.usersQueryRepository.findUser({ _id: id });
+    const user = await this.usersQueryRepository.findUserOrFail({ _id: id });
 
     return { email: user.email, login: user.login, userId: user.id };
   }
@@ -78,22 +88,22 @@ export class AuthService {
 
   async resendEmail(resendEmailDto: ResendEmailDto): PromiseResult<string> {
     const { email } = resendEmailDto;
-    // TODO not using queryRepository inside command service
-    const authInfo = await this.usersQueryRepository.findAuthInfo({ email: email });
-    // const authInfo = await this.usersQueryRepository.findAuthInfo({ userId: user?.id });
+    const user = await this.usersQueryRepository.findUserWithoutException({ email });
+    const authInfo = await this.usersQueryRepository.findAuthInfo({ email });
 
-    if (!authInfo) {
+    if (!authInfo || !user) {
       return errorResult(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
     }
 
-    const code = await this.usersRepository.resendConfirmCode(user.id, authInfo);
-    // Promise.
+    const code = await this.usersRepository.updateConfirmCode(user.id, authInfo);
 
     await emailManager.sendConfirmationEmail(email, 'Confirm registration', code);
     return successResult(ResultStatus.SUCCESS, code);
   }
 
-  async refreshToken(refreshToken: string): PromiseResult<{ accessToken: string; refreshToken: string }> {
+  async refreshToken(
+    refreshToken: string,
+  ): PromiseResult<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersQueryRepository.findUserWithoutException({
       'authInfo.refreshToken': refreshToken,
     });
@@ -103,7 +113,10 @@ export class AuthService {
     }
 
     const result = await this.getTokens(user.id, user.login || user.email);
-    await this.usersRepository.updateAuthInfo({ _id: user.id }, { refreshToken: result.refreshToken });
+    await this.usersRepository.updateAuthInfo(
+      { _id: user.id },
+      { refreshToken: result.refreshToken },
+    );
     return successResult(ResultStatus.SUCCESS, result);
   }
 

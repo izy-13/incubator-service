@@ -47,7 +47,7 @@ export class UsersService {
   }
 
   findOne(id: string): Promise<UserEntity> {
-    return this.queryRepository.findUser({ _id: id });
+    return this.queryRepository.findUserOrFail({ _id: id });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

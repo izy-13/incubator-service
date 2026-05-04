@@ -1,10 +1,10 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Auth } from '../schemas/auth.schema';
+import { AuthEntity } from '../schemas/auth.schema';
 import { FilterQuery, Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
 export class AuthRepository {
-  constructor(@InjectModel(Auth.name) private readonly authModel: Model<Auth>) {}
+  constructor(@InjectModel(AuthEntity.name) private readonly authModel: Model<AuthEntity>) {}
 
   async updateAuthByConfirmCode(code: string): Promise<boolean> {
     const result = await this.authModel
@@ -26,8 +26,7 @@ export class AuthRepository {
     return code;
   }
 
-  // TODO naming like update not resend
-  async resendConfirmCode(userId: string, authInfo: Auth): Promise<string> {
+  async updateConfirmCode(userId: string, authInfo: AuthEntity): Promise<string> {
     const { attempts, isConfirmed, code } = authInfo;
     const codeProps = !isConfirmed ? uuidv4() : code;
     const dateProps = !isConfirmed ? new Date().toISOString() : authInfo.expiredAt;
@@ -42,7 +41,7 @@ export class AuthRepository {
     return this.authModel.deleteMany({}).exec();
   }
 
-  async updateAuthInfo(filter: FilterQuery<Auth>, authInfo: Partial<Auth>) {
+  async updateAuthInfo(filter: FilterQuery<AuthEntity>, authInfo: Partial<AuthEntity>) {
     return await this.authModel.findOneAndUpdate(filter, authInfo).exec();
   }
 }

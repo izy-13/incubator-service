@@ -31,8 +31,7 @@ export class AuthRepository {
     return code;
   }
 
-  // TODO naming like update not resend
-  async resendConfirmCode(userId: string, authInfo: AuthEntity): Promise<string> {
+  async updateConfirmCode(userId: string, authInfo: AuthEntity): Promise<string> {
     const { isConfirmed, code } = authInfo;
     const codeProps = !isConfirmed ? uuidv4() : code;
 

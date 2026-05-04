@@ -49,8 +49,7 @@ export class UsersQueryRepository {
 
     return { id: _id.toJSON(), email, login, createdAt: new Date(createdAt || '').toISOString() };
   }
-  // TODO naming findUserOrFail
-  async findUser(filter: FilterQuery<User>): Promise<UserEntity> {
+  async findUserOrFail(filter: FilterQuery<User>): Promise<UserEntity> {
     const user = await this.userModel.findOne(filter).exec();
 
     if (!user) {

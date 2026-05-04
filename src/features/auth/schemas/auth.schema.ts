@@ -1,11 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 
-export type AuthDocument = HydratedDocument<Auth>;
+export type AuthDocument = HydratedDocument<AuthEntity>;
 
-// TODO naming Entity instead of Schema
 @Schema({ timestamps: { createdAt: true, updatedAt: false }, versionKey: false })
-export class Auth {
+export class AuthEntity {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   userId: mongoose.Types.ObjectId;
 
@@ -29,4 +28,4 @@ export class Auth {
   createdAt?: string;
 }
 
-export const AuthSchema = SchemaFactory.createForClass(Auth);
+export const AuthSchema = SchemaFactory.createForClass(AuthEntity);

@@ -48,7 +48,7 @@ export class AuthService {
   }
 
   async findMe(id: string): Promise<MeEntity> {
-    const user = await this.usersQueryRepository.findUser({ _id: id });
+    const user = await this.usersQueryRepository.findUserOrFail({ _id: id });
 
     return { email: user.email, login: user.login, userId: user.id };
   }
@@ -82,7 +82,7 @@ export class AuthService {
       return errorResult(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
     }
 
-    const code = await this.repository.resendConfirmCode(user.id, authInfo);
+    const code = await this.repository.updateConfirmCode(user.id, authInfo);
 
     await emailManager.sendConfirmationEmail(email, 'Confirm registration', code);
     return successResult(ResultStatus.SUCCESS, code);
@@ -100,7 +100,7 @@ export class AuthService {
     }
 
     const { userId } = authInfo;
-    const user = await this.usersQueryRepository.findUser({ _id: userId });
+    const user = await this.usersQueryRepository.findUserOrFail({ _id: userId });
 
     if (!user) {
       return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
