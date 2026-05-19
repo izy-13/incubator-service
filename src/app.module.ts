@@ -18,7 +18,8 @@ import { MongooseModule } from '@nestjs/mongoose';
       useFactory: () => {
         // TODO mb another cluster for vercel
         const isTestEnv = process.env.NODE_ENV === 'test';
-        return { uri: `mongodb://${process.env.MONGO_DB_PORT}/${isTestEnv ? 'nestTest' : 'nest'}` };
+        const uri = process.env.MONGO_URI ?? `mongodb://${process.env.MONGO_DB_PORT}/nest`;
+        return { uri: isTestEnv ? `mongodb://${process.env.MONGO_DB_PORT}/nestTest` : uri };
       },
     }),
     PostsModule,
