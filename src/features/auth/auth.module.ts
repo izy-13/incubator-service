@@ -1,14 +1,18 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module';
+import { UsersModule } from '../userModule/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthEntity, AuthSchema } from './schemas/auth.schema';
 import { AuthQueryRepository, AuthRepository } from './repositories';
-import { CodeAuthExistsConstraint, RegisterAuthValidatorConstraint, ResendAuthValidatorConstraint } from './decorators';
+import {
+  CodeAuthExistsConstraint,
+  RegisterAuthValidatorConstraint,
+  ResendAuthValidatorConstraint,
+} from './decorators';
 import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
 
 @Module({

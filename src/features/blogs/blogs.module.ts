@@ -11,7 +11,10 @@ import { PostsModule } from '../posts/posts.module';
 const { BLOGS, POSTS } = routesConstants;
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]), forwardRef(() => PostsModule)],
+  imports: [
+    MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]),
+    forwardRef(() => PostsModule),
+  ],
   controllers: [BlogsController],
   providers: [BlogsService, BlogsQueryRepository, BlogsRepository],
   exports: [BlogsService],
