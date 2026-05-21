@@ -4,7 +4,7 @@ import mongoose, { Model } from 'mongoose';
 import { PostsRepository } from '../posts.repository';
 import { PostDb } from '../../schemas/post.schema';
 import { NotFoundException } from '@nestjs/common';
-import { dbConnect, dbDisconnect } from '../../../../coreUtils';
+import { dbConnect, dbDisconnect } from '../../../../infrastructure';
 import { BlogsService } from '../../../blogs/blogs.service';
 import { UpdatePostDto } from '../../dto/update-post.dto';
 import { CreatePostWithBlogIdDto } from '../../dto/create-post-with-blogId.dto';
@@ -31,7 +31,9 @@ describe('PostsRepository', () => {
     postModel = connection.model<PostDb>('Post', postSchema);
 
     blogsService = {
-      findOne: jest.fn().mockResolvedValue({ id: new mongoose.Types.ObjectId().toString(), name: 'Test Blog' }),
+      findOne: jest
+        .fn()
+        .mockResolvedValue({ id: new mongoose.Types.ObjectId().toString(), name: 'Test Blog' }),
     } as unknown as BlogsService;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -91,7 +93,9 @@ describe('PostsRepository', () => {
 
   it('should throw NotFoundException when updating a non-existing post', async () => {
     await expect(
-      postsRepository.updatePost(new mongoose.Types.ObjectId().toString(), { title: 'New Title' } as any),
+      postsRepository.updatePost(new mongoose.Types.ObjectId().toString(), {
+        title: 'New Title',
+      } as any),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -112,9 +116,9 @@ describe('PostsRepository', () => {
   });
 
   it('should throw NotFoundException when deleting a non-existing post', async () => {
-    await expect(postsRepository.deletePost(new mongoose.Types.ObjectId().toString())).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      postsRepository.deletePost(new mongoose.Types.ObjectId().toString()),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should delete all posts', async () => {

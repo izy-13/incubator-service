@@ -9,21 +9,26 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import { routesConstants, transformValidationFactory } from '../../coreUtils';
+import {
+  BasicAuthGuard,
+  ObjectIdValidationPipe,
+  PaginatedResponse,
+  PublicApi,
+  ResultNotification,
+  routesConstants,
+} from '../../common';
 import { BlogEntity } from './entities/blog.entity';
-import { ObjectIdValidationPipe } from '../../pipes';
 import { FindAllBlogsQueryDto } from './dto/find-all-blogs-query.dto';
-import { PaginatedResponse } from '../../types';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { PostEntity } from '../posts/entities/post.entity';
 import { FindAllPostsQueryDto } from '../posts/dto/find-all-posts-query.dto';
-import { PublicApi } from '../../decorators';
 
 const { BLOGS, POSTS } = routesConstants;
 
@@ -32,7 +37,8 @@ export class BlogsController {
   constructor(private readonly blogsService: BlogsService) {}
 
   @PublicApi()
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UseGuards(BasicAuthGuard)
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createBlogDto: CreateBlogDto): Promise<BlogEntity | void> {
@@ -53,7 +59,8 @@ export class BlogsController {
   }
 
   @PublicApi()
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UseGuards(BasicAuthGuard)
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   update(@Param('id', ObjectIdValidationPipe) id: string, @Body() updateBlogDto: UpdateBlogDto) {
@@ -61,6 +68,7 @@ export class BlogsController {
   }
 
   @PublicApi()
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
@@ -68,7 +76,8 @@ export class BlogsController {
   }
 
   @PublicApi()
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UseGuards(BasicAuthGuard)
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @Post(`:blogId/${POSTS}`)
   @HttpCode(HttpStatus.CREATED)
   createPost(

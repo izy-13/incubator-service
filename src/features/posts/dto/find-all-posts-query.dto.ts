@@ -1,4 +1,4 @@
-import { BaseQueryParamsDto } from '../../../coreUtils';
+import { BaseQueryParamsDto } from '../../../common';
 import { PostSortBy } from '../entities/post.entity';
 
 export class FindAllPostsQueryDto extends BaseQueryParamsDto {

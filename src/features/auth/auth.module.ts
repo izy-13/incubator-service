@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../userModule/users.module';
+import { UsersModule } from '../user/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards';
@@ -17,7 +17,7 @@ import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
 
 @Module({
   controllers: [AuthController],
-  exports: [AuthRepository, AuthService],
+  exports: [AuthRepository, AuthService, RefreshTokenGuard],
   imports: [
     MongooseModule.forFeature([{ name: AuthEntity.name, schema: AuthSchema }]),
     JwtModule.register({}),

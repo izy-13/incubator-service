@@ -4,7 +4,7 @@ import mongoose, { Model } from 'mongoose';
 import { BlogsRepository } from '../blogs.repository';
 import { Blog } from '../../schemas/blog.schema';
 import { NotFoundException } from '@nestjs/common';
-import { dbConnect, dbDisconnect } from '../../../../coreUtils';
+import { dbConnect, dbDisconnect } from '../../../../infrastructure';
 import { CreateBlogDto } from '../../dto/create-blog.dto';
 import { UpdateBlogDto } from '../../dto/update-blog.dto';
 
@@ -77,7 +77,9 @@ describe('BlogsRepository', () => {
 
   it('should throw NotFoundException when updating a non-existing blog', async () => {
     await expect(
-      blogsRepository.updateBlog(new mongoose.Types.ObjectId().toString(), { name: 'New Name' } as any),
+      blogsRepository.updateBlog(new mongoose.Types.ObjectId().toString(), {
+        name: 'New Name',
+      } as any),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -96,9 +98,9 @@ describe('BlogsRepository', () => {
   });
 
   it('should throw NotFoundException when deleting a non-existing blog', async () => {
-    await expect(blogsRepository.deleteBlog(new mongoose.Types.ObjectId().toString())).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      blogsRepository.deleteBlog(new mongoose.Types.ObjectId().toString()),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should delete all blogs', async () => {

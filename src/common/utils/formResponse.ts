@@ -1,0 +1,27 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Result, ResultStatus } from '../types';
+
+export function formResponse<T>(result: Result<T>): T {
+  switch (result.status) {
+    case ResultStatus.CREATED:
+    case ResultStatus.SUCCESS:
+      return result.data;
+    case ResultStatus.FORBIDDEN_ERROR:
+      throw new ForbiddenException(result.errorMessage);
+    case ResultStatus.NOT_FOUND:
+      throw new NotFoundException(result.errorMessage);
+    case ResultStatus.BAD_REQUEST:
+      throw new BadRequestException({
+        errorsMessages: result.extensions.length > 0 ? result.extensions : result.errorMessage,
+      });
+    case ResultStatus.UNAUTHORIZED:
+      throw new UnauthorizedException(result.errorMessage);
+    default:
+      return result.data;
+  }
+}

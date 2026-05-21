@@ -5,7 +5,9 @@ import { RequestLogDocument, RequestLogEntity } from '../entities/request-log.en
 
 @Injectable()
 export class RequestLogRepository {
-  constructor(@InjectModel(RequestLogEntity.name) private requestLogModel: Model<RequestLogDocument>) {}
+  constructor(
+    @InjectModel(RequestLogEntity.name) private requestLogModel: Model<RequestLogDocument>,
+  ) {}
 
   async logRequest(ip: string, url: string): Promise<RequestLogEntity> {
     return this.requestLogModel.create({ ip, url, date: new Date() });

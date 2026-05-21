@@ -1,14 +1,11 @@
-import { forwardRef, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { BlogsController } from './blogs.controller';
-import { routesConstants } from '../../coreUtils';
-import { BasicAuthMiddleware } from '../../middlewares';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './schemas/blog.schema';
 import { BlogsQueryRepository, BlogsRepository } from './repositories';
 import { PostsModule } from '../posts/posts.module';
-
-const { BLOGS, POSTS } = routesConstants;
+import { BlogExistsConstraint } from './decorators/blog-exists.decorator';
 
 @Module({
   imports: [
@@ -16,18 +13,7 @@ const { BLOGS, POSTS } = routesConstants;
     forwardRef(() => PostsModule),
   ],
   controllers: [BlogsController],
-  providers: [BlogsService, BlogsQueryRepository, BlogsRepository],
-  exports: [BlogsService],
+  providers: [BlogsService, BlogsQueryRepository, BlogsRepository, BlogExistsConstraint],
+  exports: [BlogsService, BlogExistsConstraint],
 })
-export class BlogsModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(BasicAuthMiddleware)
-      .forRoutes(
-        { path: BLOGS, method: RequestMethod.POST },
-        { path: `${BLOGS}/:id`, method: RequestMethod.DELETE },
-        { path: `${BLOGS}/:id`, method: RequestMethod.PUT },
-        { path: `${BLOGS}/:blogId/${POSTS}`, method: RequestMethod.POST },
-      );
-  }
-}
+export class BlogsModule {}

@@ -2,7 +2,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { Injectable } from '@nestjs/common';
-import { authConstants } from '../../../coreUtils';
+import { authConstants } from '../../../common';
 
 const { PUBLIC_KEY } = authConstants;
 

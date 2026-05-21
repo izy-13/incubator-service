@@ -2,7 +2,7 @@ import { registerDecorator, ValidatorConstraint } from 'class-validator';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ResendEmailDto } from '../dto';
 import { AuthQueryRepository } from '../repositories';
-import { UsersQueryRepository } from '../../users/repositories';
+import { UsersQueryRepository } from '../../user/repositories';
 import { isBefore } from 'date-fns/isBefore';
 
 @ValidatorConstraint({ async: true })

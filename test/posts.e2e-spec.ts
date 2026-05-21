@@ -1,15 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import { dbConnect, dbDisconnect } from '../src/coreUtils';
+import { dbConnect, dbDisconnect } from '../src/infrastructure';
 import { AppModule } from '../src/app.module';
-
-// TODO repair this test
-// const createBlogDto = {
-//   name: 'New Blog',
-//   description: 'Some content',
-//   websiteUrl: 'www.google.com',
-// };
 
 const createPostDto = {
   title: 'New Post',
@@ -20,6 +14,7 @@ const createPostDto = {
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
   const authHeader = { Authorization: 'Basic ' + Buffer.from('admin:qwerty').toString('base64') };
+  const server = (): App => app.getHttpServer() as App;
 
   beforeAll(async () => {
     // TODO useContainer from class-validator
@@ -39,7 +34,7 @@ describe('PostsController (e2e)', () => {
 
   it('should create a post', async () => {
     // const createBlog =
-    const response = await request(app.getHttpServer())
+    const response = await request(server())
       .post('/posts')
       .send({ ...createPostDto, blogId: '67b99e384d6144aa499cba88' })
       .set(authHeader);

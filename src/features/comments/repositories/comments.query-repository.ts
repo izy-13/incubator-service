@@ -4,8 +4,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { Comment } from '../schemas/comment.schema';
 import { FindAllCommentsQueryDto } from '../dto/find-all-comments-query.dto';
-import { PaginatedResponse } from '../../../types';
-import { formatPaginatedResponse } from '../../../coreUtils';
+import { PaginatedResponse } from '../../../common';
+import { formatPaginatedResponse } from '../../../common';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -34,7 +34,10 @@ export class CommentsQueryRepository {
     const items = comments.map(({ _id, content, createdAt, commentatorInfo }) => ({
       id: _id.toJSON(),
       content,
-      commentatorInfo: { userId: commentatorInfo.userId.toJSON(), userLogin: commentatorInfo.userLogin },
+      commentatorInfo: {
+        userId: commentatorInfo.userId.toJSON(),
+        userLogin: commentatorInfo.userLogin,
+      },
       createdAt: new Date(createdAt || '').toISOString(),
     }));
 
@@ -53,7 +56,10 @@ export class CommentsQueryRepository {
       id: _id.toJSON(),
       content,
       createdAt: new Date(createdAt || '').toISOString(),
-      commentatorInfo: { userId: commentatorInfo.userId.toJSON(), userLogin: commentatorInfo.userLogin },
+      commentatorInfo: {
+        userId: commentatorInfo.userId.toJSON(),
+        userLogin: commentatorInfo.userLogin,
+      },
     };
   }
 }

@@ -4,7 +4,7 @@ import mongoose, { Model } from 'mongoose';
 import { BlogsQueryRepository } from '../blogs.query-repository';
 import { Blog } from '../../schemas/blog.schema';
 import { NotFoundException } from '@nestjs/common';
-import { dbConnect, dbDisconnect } from '../../../../coreUtils';
+import { dbConnect, dbDisconnect } from '../../../../infrastructure';
 
 describe('BlogsQueryRepository', () => {
   let blogsQueryRepository: BlogsQueryRepository;
@@ -78,8 +78,8 @@ describe('BlogsQueryRepository', () => {
   });
 
   it('should throw NotFoundException if blog is not found', async () => {
-    await expect(blogsQueryRepository.findBlogById(new mongoose.Types.ObjectId().toString())).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      blogsQueryRepository.findBlogById(new mongoose.Types.ObjectId().toString()),
+    ).rejects.toThrow(NotFoundException);
   });
 });

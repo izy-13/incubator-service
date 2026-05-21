@@ -13,11 +13,15 @@ import {
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { UpdateCommentDto } from './dto';
-import { formResponse, routesConstants, transformValidationFactory } from '../../coreUtils';
-import { PublicApi } from '../../decorators';
-import { ObjectIdValidationPipe } from '../../pipes';
+import {
+  formResponse,
+  ObjectIdValidationPipe,
+  PublicApi,
+  RequestWithJwt,
+  ResultNotification,
+  routesConstants,
+} from '../../common';
 import { CommentEntity } from './entities/comment.entity';
-import { RequestWithJwt } from '../../types';
 
 const { COMMENTS } = routesConstants;
 
@@ -33,7 +37,7 @@ export class CommentsController {
   }
 
   @Put(':id')
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @HttpCode(HttpStatus.NO_CONTENT)
   async update(
     @Req() request: RequestWithJwt,

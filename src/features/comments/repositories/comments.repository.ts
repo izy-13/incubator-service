@@ -5,7 +5,7 @@ import { Comment } from '../schemas/comment.schema';
 import { CommentsQueryRepository } from './comments.query-repository';
 import { Model } from 'mongoose';
 import { CommentEntity } from '../entities/comment.entity';
-import { JwtPayload } from '../../../types';
+import { JwtPayload } from '../../../common';
 
 @Injectable()
 export class CommentsRepository {
@@ -14,7 +14,11 @@ export class CommentsRepository {
     private readonly queryRepository: CommentsQueryRepository,
   ) {}
 
-  async createComment(comment: CreateCommentDto, postId: string, user: JwtPayload): Promise<CommentEntity | null> {
+  async createComment(
+    comment: CreateCommentDto,
+    postId: string,
+    user: JwtPayload,
+  ): Promise<CommentEntity | null> {
     const { content } = comment;
     const newComment = await this.commentModel.create({
       content,
@@ -25,7 +29,9 @@ export class CommentsRepository {
   }
 
   async updateComment(id: string, updateCommentDto: UpdateCommentDto): Promise<boolean> {
-    const result = await this.commentModel.findByIdAndUpdate({ _id: id }, updateCommentDto, { new: true }).exec();
+    const result = await this.commentModel
+      .findByIdAndUpdate({ _id: id }, updateCommentDto, { new: true })
+      .exec();
     return !!result;
   }
 

@@ -2,14 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostEntity } from './entities/post.entity';
 import { PostsQueryRepository, PostsRepository } from './repositories';
-import { JwtPayload, PaginatedPromiseResult, PaginatedResponse, ResultStatus } from '../../types';
+import {
+  JwtPayload,
+  PaginatedPromiseResult,
+  PaginatedResponse,
+  ResultNotification,
+  ResultStatus,
+} from '../../common';
 import { FindAllPostsQueryDto } from './dto/find-all-posts-query.dto';
 import { CreatePostWithBlogIdDto } from './dto/create-post-with-blogId.dto';
 import { CommentsService } from '../comments/comments.service';
 import { FindAllCommentsQueryDto } from '../comments/dto/find-all-comments-query.dto';
 import { CommentEntity } from '../comments/entities/comment.entity';
 import { CreateCommentDto } from '../comments/dto';
-import { errorResult } from '../../coreUtils';
 
 @Injectable()
 export class PostsService {
@@ -49,7 +54,10 @@ export class PostsService {
     return this.repository.deletePost(id);
   }
 
-  findAllByBlogId(blogId: string, queryParams: FindAllPostsQueryDto): Promise<PaginatedResponse<PostEntity>> {
+  findAllByBlogId(
+    blogId: string,
+    queryParams: FindAllPostsQueryDto,
+  ): Promise<PaginatedResponse<PostEntity>> {
     const defaultParams = new FindAllPostsQueryDto();
 
     const {
@@ -60,7 +68,12 @@ export class PostsService {
     } = queryParams;
 
     // TODO should be deleted
-    return this.queryRepository.findAllPostsByBlogId(blogId, { pageNumber, sortDirection, sortBy, pageSize });
+    return this.queryRepository.findAllPostsByBlogId(blogId, {
+      pageNumber,
+      sortDirection,
+      sortBy,
+      pageSize,
+    });
   }
 
   async findAllComments(
@@ -74,7 +87,7 @@ export class PostsService {
     const post = await this.queryRepository.findPostById(postId);
 
     if (!post) {
-      return errorResult(ResultStatus.NOT_FOUND, `Post with ID ${postId} not found`);
+      return ResultNotification.error(ResultStatus.NOT_FOUND, `Post with ID ${postId} not found`);
     }
 
     return this.commentsService.create(createCommentDto, postId, user);

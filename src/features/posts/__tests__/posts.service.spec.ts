@@ -5,7 +5,7 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { NotFoundException } from '@nestjs/common';
 import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
-import { PaginatedResponse } from '../../../types';
+import { PaginatedResponse } from '../../../common';
 
 describe('PostsService', () => {
   let service: PostsService;
@@ -14,7 +14,10 @@ describe('PostsService', () => {
   let commentService: CommentsService;
 
   beforeEach(() => {
-    queryRepository = { findAllPosts: jest.fn(), findPostById: jest.fn() } as unknown as PostsQueryRepository;
+    queryRepository = {
+      findAllPosts: jest.fn(),
+      findPostById: jest.fn(),
+    } as unknown as PostsQueryRepository;
     commentService = { clearAll: jest.fn() } as unknown as CommentsService;
     repository = {
       createPost: jest.fn(),
@@ -26,7 +29,10 @@ describe('PostsService', () => {
   });
 
   it('should create a post', async () => {
-    const createPostDto = { title: 'Test Post', content: 'Test Content' } as CreatePostWithBlogIdDto;
+    const createPostDto = {
+      title: 'Test Post',
+      content: 'Test Content',
+    } as CreatePostWithBlogIdDto;
     const result: PostEntity = { id: '1', ...createPostDto } as PostEntity;
     jest.spyOn(repository, 'createPost').mockResolvedValue(result);
 
@@ -43,14 +49,21 @@ describe('PostsService', () => {
   });
 
   it('should find one post by id', async () => {
-    const result: PostEntity = { id: '1', title: 'Test Post', content: 'Test Content' } as PostEntity;
+    const result: PostEntity = {
+      id: '1',
+      title: 'Test Post',
+      content: 'Test Content',
+    } as PostEntity;
     jest.spyOn(queryRepository, 'findPostById').mockResolvedValue(result);
 
     expect(await service.findOne('1')).toBe(result);
   });
 
   it('should update a post', async () => {
-    const updatePostDto: UpdatePostDto = { title: 'Updated Post', content: 'Updated Content' } as UpdatePostDto;
+    const updatePostDto: UpdatePostDto = {
+      title: 'Updated Post',
+      content: 'Updated Content',
+    } as UpdatePostDto;
     jest.spyOn(repository, 'updatePost').mockResolvedValue(undefined);
 
     expect(await service.update('1', updatePostDto)).toBeUndefined();

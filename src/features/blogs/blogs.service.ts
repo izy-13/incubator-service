@@ -6,7 +6,7 @@ import { Blog } from './schemas/blog.schema';
 import { BlogEntity } from './entities/blog.entity';
 import { BlogsQueryRepository, BlogsRepository } from './repositories';
 import { FindAllBlogsQueryDto } from './dto/find-all-blogs-query.dto';
-import { PaginatedResponse } from '../../types';
+import { PaginatedResponse } from '../../common';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { PostEntity } from '../posts/entities/post.entity';
 import { PostsService } from '../posts/posts.service';
@@ -36,7 +36,13 @@ export class BlogsService {
       pageSize = defaultParams.pageSize,
     } = queryParams;
 
-    return this.queryRepository.findAllBlogs({ pageNumber, sortDirection, sortBy, searchNameTerm, pageSize });
+    return this.queryRepository.findAllBlogs({
+      pageNumber,
+      sortDirection,
+      sortBy,
+      searchNameTerm,
+      pageSize,
+    });
   }
 
   findOne(id: string): Promise<BlogEntity> {
@@ -55,7 +61,10 @@ export class BlogsService {
     return this.repository.deleteAllBlogs();
   }
 
-  findAllPosts(blogId: string, queryParams: FindAllPostsQueryDto): Promise<PaginatedResponse<PostEntity>> {
+  findAllPosts(
+    blogId: string,
+    queryParams: FindAllPostsQueryDto,
+  ): Promise<PaginatedResponse<PostEntity>> {
     return this.postsService.findAllByBlogId(blogId, queryParams);
   }
 

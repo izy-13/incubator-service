@@ -4,8 +4,7 @@ import { Model } from 'mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogEntity } from '../entities/blog.entity';
 import { FindAllBlogsQueryDto } from '../dto/find-all-blogs-query.dto';
-import { PaginatedResponse } from '../../../types';
-import { formatPaginatedResponse } from '../../../coreUtils';
+import { formatPaginatedResponse, PaginatedResponse } from '../../../common';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -25,14 +24,16 @@ export class BlogsQueryRepository {
       .exec();
 
     // TODO adjust data transform for avoid copycode
-    const items: BlogEntity[] = blogs.map(({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
-      id: _id.toJSON(),
-      name,
-      createdAt: new Date(createdAt || '').toISOString(),
-      description,
-      websiteUrl,
-      isMembership,
-    }));
+    const items: BlogEntity[] = blogs.map(
+      ({ _id, name, description, websiteUrl, isMembership, createdAt }) => ({
+        id: _id.toJSON(),
+        name,
+        createdAt: new Date(createdAt || '').toISOString(),
+        description,
+        websiteUrl,
+        isMembership,
+      }),
+    );
 
     return formatPaginatedResponse<BlogEntity>({ page: pageNumber, items, pageSize, totalCount });
   }

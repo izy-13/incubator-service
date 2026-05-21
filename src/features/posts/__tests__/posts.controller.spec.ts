@@ -4,7 +4,7 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
-import { PaginatedResponse } from '../../../types';
+import { PaginatedResponse } from '../../../common';
 
 describe('PostsController', () => {
   let controller: PostsController;
@@ -52,7 +52,11 @@ describe('PostsController', () => {
   });
 
   it('should find one post by id', async () => {
-    const result: PostEntity = { id: '1', title: 'Test Post', content: 'Test Content' } as PostEntity;
+    const result: PostEntity = {
+      id: '1',
+      title: 'Test Post',
+      content: 'Test Content',
+    } as PostEntity;
     jest.spyOn(service, 'findOne').mockResolvedValue(result);
 
     expect(await controller.findOne('1')).toBe(result);

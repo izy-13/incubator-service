@@ -1,11 +1,12 @@
 import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfirmCodeDto, CreateAuthDto, RegistrationAuthDto, ResendEmailDto } from './dto';
-import { UsersQueryRepository, UsersRepository } from '../users/repositories';
+import { UsersQueryRepository, UsersRepository } from '../user/repositories';
 import { JwtService } from '@nestjs/jwt';
 import { MeEntity } from './entity/me.entity';
-import { PromiseResult, ResultStatus } from '../../types';
+import { PromiseResult, ResultNotification, ResultStatus } from '../../common';
 import { AuthQueryRepository, AuthRepository } from './repositories';
-import { emailManager, errorResult, successResult } from '../../coreUtils';
+import { v4 as uuidv4 } from 'uuid';
+import { emailManager } from '../../infrastructure';
 
 @Injectable()
 export class AuthService {
@@ -19,14 +20,25 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async getTokens(userId: string, loginOrEmail: string) {
+  async getTokens(userId: string, loginOrEmail: string, metadata?: object) {
+    const deviceId = uuidv4();
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync({ sub: userId, loginOrEmail }, { secret: process.env.JWT_SECRET, expiresIn: '10s' }),
       this.jwtService.signAsync(
         { sub: userId, loginOrEmail },
+        { secret: process.env.JWT_SECRET, expiresIn: '10s' },
+      ),
+      this.jwtService.signAsync(
+        { sub: userId, loginOrEmail, deviceId },
         { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '20s' },
       ),
     ]);
+
+    const deviceSecurityRecord = {
+      deviceId,
+      lastActiveDate: new Date().toISOString(),
+      ...metadata,
+    };
+    console.log(accessToken, refreshToken, deviceSecurityRecord);
 
     await this.repository.updateAuthInfo({ userId }, { refreshToken });
 
@@ -36,7 +48,10 @@ export class AuthService {
     };
   }
 
-  async create(createAuthDto: CreateAuthDto): Promise<{ accessToken: string; refreshToken: string }> {
+  async create(
+    createAuthDto: CreateAuthDto,
+    metadata: object,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const { loginOrEmail, password } = createAuthDto;
     const user = await this.usersQueryRepository.findUserByLoginOrEmail(loginOrEmail, password);
 
@@ -44,7 +59,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return await this.getTokens(user.id, user.login || user.email);
+    return await this.getTokens(user.id, user.login || user.email, metadata);
   }
 
   async findMe(id: string): Promise<MeEntity> {
@@ -58,18 +73,20 @@ export class AuthService {
     const result = await this.repository.updateAuthByConfirmCode(code);
 
     if (!result) {
-      return errorResult(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
+      return ResultNotification.error(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
     }
 
-    return successResult(ResultStatus.SUCCESS, result);
+    return ResultNotification.success(result);
   }
 
   async registration(registrationDto: RegistrationAuthDto): PromiseResult<string> {
     const user = await this.usersRepository.createUser(registrationDto);
     const code = await this.repository.registerUser(user.id);
 
-    emailManager.sendConfirmationEmail(user.email, 'Confirm registration', code).catch((e) => console.error(e));
-    return successResult(ResultStatus.SUCCESS, code);
+    emailManager
+      .sendConfirmationEmail(user.email, 'Confirm registration', code)
+      .catch((e) => console.error(e));
+    return ResultNotification.success(code);
   }
 
   async resendEmail(resendEmailDto: ResendEmailDto): PromiseResult<string> {
@@ -79,45 +96,47 @@ export class AuthService {
     const authInfo = await this.queryRepository.findAuthInfo({ userId: user?.id });
 
     if (!authInfo || !user) {
-      return errorResult(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
+      return ResultNotification.error(ResultStatus.FORBIDDEN_ERROR, 'Something went wrong');
     }
 
     const code = await this.repository.updateConfirmCode(user.id, authInfo);
 
     await emailManager.sendConfirmationEmail(email, 'Confirm registration', code);
-    return successResult(ResultStatus.SUCCESS, code);
+    return ResultNotification.success(code);
   }
 
   async clearAll() {
     await this.repository.deleteAll();
   }
 
-  async refreshToken(refreshToken: string): PromiseResult<{ accessToken: string; refreshToken: string }> {
+  async refreshToken(
+    refreshToken: string,
+  ): PromiseResult<{ accessToken: string; refreshToken: string }> {
     const authInfo = await this.queryRepository.findAuthInfo({ refreshToken });
 
     if (!authInfo) {
-      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+      return ResultNotification.error(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
     }
 
     const { userId } = authInfo;
     const user = await this.usersQueryRepository.findUserOrFail({ _id: userId });
 
     if (!user) {
-      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+      return ResultNotification.error(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
     }
 
     const result = await this.getTokens(user.id, user.login || user.email);
     await this.repository.updateAuthInfo({ refreshToken }, { refreshToken: result.refreshToken });
-    return successResult(ResultStatus.SUCCESS, result);
+    return ResultNotification.success(result);
   }
 
   async logout(refreshToken: string): PromiseResult<boolean> {
     const result = await this.repository.updateAuthInfo({ refreshToken }, { refreshToken: '' });
 
     if (!result) {
-      return errorResult(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
+      return ResultNotification.error(ResultStatus.UNAUTHORIZED, 'Invalid refresh token');
     }
 
-    return successResult(ResultStatus.SUCCESS, true);
+    return ResultNotification.success(true);
   }
 }

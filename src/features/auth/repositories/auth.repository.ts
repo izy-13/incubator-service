@@ -32,7 +32,10 @@ export class AuthRepository {
     const dateProps = !isConfirmed ? new Date().toISOString() : authInfo.expiredAt;
 
     await this.authModel
-      .findOneAndUpdate({ userId }, { code: codeProps, expiredAt: dateProps, attempts: attempts + 1 })
+      .findOneAndUpdate(
+        { userId },
+        { code: codeProps, expiredAt: dateProps, attempts: attempts + 1 },
+      )
       .exec();
     return codeProps;
   }

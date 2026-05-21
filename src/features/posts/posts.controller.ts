@@ -10,18 +10,25 @@ import {
   Put,
   Query,
   Req,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { formResponse, routesConstants, transformValidationFactory } from '../../coreUtils';
+import {
+  BasicAuthGuard,
+  formResponse,
+  ObjectIdValidationPipe,
+  PaginatedResponse,
+  PublicApi,
+  RequestWithJwt,
+  ResultNotification,
+  routesConstants,
+} from '../../common';
 import { PostEntity } from './entities/post.entity';
-import { ObjectIdValidationPipe } from '../../pipes';
 import { FindAllPostsQueryDto } from './dto/find-all-posts-query.dto';
-import { PaginatedResponse, RequestWithJwt } from '../../types';
 import { CreatePostWithBlogIdDto } from './dto/create-post-with-blogId.dto';
-import { PublicApi } from '../../decorators';
 import { FindAllCommentsQueryDto } from '../comments/dto/find-all-comments-query.dto';
 import { CreateCommentDto } from '../comments/dto';
 
@@ -32,7 +39,8 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @PublicApi()
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UseGuards(BasicAuthGuard)
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createPostDto: CreatePostWithBlogIdDto): Promise<PostEntity> {
@@ -52,7 +60,8 @@ export class PostsController {
   }
 
   @PublicApi()
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UseGuards(BasicAuthGuard)
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   update(@Param('id', ObjectIdValidationPipe) id: string, @Body() updatePostDto: UpdatePostDto) {
@@ -60,6 +69,7 @@ export class PostsController {
   }
 
   @PublicApi()
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
@@ -77,7 +87,7 @@ export class PostsController {
   }
 
   @Post(`:postId/${COMMENTS}`)
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @HttpCode(HttpStatus.CREATED)
   async createComment(
     @Param('postId', ObjectIdValidationPipe) postId: string,

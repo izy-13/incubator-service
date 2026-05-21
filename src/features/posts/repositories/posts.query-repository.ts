@@ -4,8 +4,8 @@ import { Model } from 'mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { PostEntity } from '../entities/post.entity';
 import { FindAllPostsQueryDto } from '../dto/find-all-posts-query.dto';
-import { PaginatedResponse } from '../../../types';
-import { formatPaginatedResponse } from '../../../coreUtils';
+import { PaginatedResponse } from '../../../common';
+import { formatPaginatedResponse } from '../../../common';
 
 export class PostsQueryRepository {
   constructor(@InjectModel(PostDb.name) private readonly postModel: Model<PostDb>) {}
@@ -22,15 +22,17 @@ export class PostsQueryRepository {
       .exec();
 
     // TODO adjust data transform for avoid copycode
-    const items: PostEntity[] = posts.map(({ _id, title, content, createdAt, blogId, blogName, shortDescription }) => ({
-      id: _id.toJSON(),
-      title,
-      content,
-      shortDescription,
-      createdAt: new Date(createdAt || '').toISOString(),
-      blogId: blogId.toJSON(),
-      blogName,
-    }));
+    const items: PostEntity[] = posts.map(
+      ({ _id, title, content, createdAt, blogId, blogName, shortDescription }) => ({
+        id: _id.toJSON(),
+        title,
+        content,
+        shortDescription,
+        createdAt: new Date(createdAt || '').toISOString(),
+        blogId: blogId.toJSON(),
+        blogName,
+      }),
+    );
 
     return formatPaginatedResponse<PostEntity>({ page: pageNumber, items, pageSize, totalCount });
   }
@@ -77,15 +79,17 @@ export class PostsQueryRepository {
       .limit(pageSize)
       .exec();
 
-    const items: PostEntity[] = posts.map(({ _id, title, content, createdAt, blogId, blogName, shortDescription }) => ({
-      id: _id.toJSON(),
-      title,
-      content,
-      shortDescription,
-      createdAt: new Date(createdAt || '').toISOString(),
-      blogId: blogId.toJSON(),
-      blogName,
-    }));
+    const items: PostEntity[] = posts.map(
+      ({ _id, title, content, createdAt, blogId, blogName, shortDescription }) => ({
+        id: _id.toJSON(),
+        title,
+        content,
+        shortDescription,
+        createdAt: new Date(createdAt || '').toISOString(),
+        blogId: blogId.toJSON(),
+        blogName,
+      }),
+    );
 
     return formatPaginatedResponse<PostEntity>({ page: pageNumber, items, pageSize, totalCount });
   }

@@ -13,15 +13,28 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ConfirmCodeDto, CreateAuthDto, RegistrationAuthDto, ResendEmailDto } from './dto';
-import { formResponse, routesConstants, transformValidationFactory } from '../../coreUtils';
-import { ExtractCookies, PublicApi } from '../../decorators';
+import {
+  ExtractCookies,
+  formResponse,
+  PublicApi,
+  RequestWithJwt,
+  ResultNotification,
+  routesConstants,
+} from '../../common';
 import { MeEntity } from './entity/me.entity';
-import { RequestWithJwt } from '../../types';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { RefreshTokenGuard } from './guards';
 
-const { AUTH, LOGIN, ME, REGISTRATION_CONFIRM, REGISTRATION, REGISTRATION_EMAIL_RESEND, LOGOUT, REFRESH_TOKEN } =
-  routesConstants;
+const {
+  AUTH,
+  LOGIN,
+  ME,
+  REGISTRATION_CONFIRM,
+  REGISTRATION,
+  REGISTRATION_EMAIL_RESEND,
+  LOGOUT,
+  REFRESH_TOKEN,
+} = routesConstants;
 
 @Controller(`${AUTH}`)
 export class AuthController {
@@ -30,8 +43,12 @@ export class AuthController {
   @PublicApi()
   @Post(LOGIN)
   @HttpCode(HttpStatus.OK)
-  async create(@Body() createAuthDto: CreateAuthDto, @Res() res: Response) {
-    const { refreshToken, accessToken } = await this.authService.create(createAuthDto);
+  async create(@Body() createAuthDto: CreateAuthDto, @Res() res: Response, @Req() req: Request) {
+    const metadata = {
+      ip: req.socket.remoteAddress || req.headers['x-forwarded-for'] || req.ip,
+      title: req.headers['user-agent'],
+    };
+    const { refreshToken, accessToken } = await this.authService.create(createAuthDto, metadata);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -49,7 +66,7 @@ export class AuthController {
 
   @PublicApi()
   @Post(REGISTRATION_CONFIRM)
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmCode(@Body() confirmCodeDto: ConfirmCodeDto) {
     const result = await this.authService.confirmCode(confirmCodeDto);
@@ -58,7 +75,7 @@ export class AuthController {
 
   @PublicApi()
   @Post(REGISTRATION)
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() registrationDto: RegistrationAuthDto) {
     const result = await this.authService.registration(registrationDto);
@@ -67,7 +84,7 @@ export class AuthController {
 
   @PublicApi()
   @Post(REGISTRATION_EMAIL_RESEND)
-  @UsePipes(new ValidationPipe({ exceptionFactory: transformValidationFactory }))
+  @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
   @HttpCode(HttpStatus.NO_CONTENT)
   async resendEmail(@Body() resendEmailDto: ResendEmailDto) {
     const result = await this.authService.resendEmail(resendEmailDto);

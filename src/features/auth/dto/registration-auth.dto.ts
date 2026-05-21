@@ -1,8 +1,8 @@
 import { IsNotEmpty, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { IsUnique } from '../../../decorators';
-import { User } from '../../users/schemas/user.schema';
+import { IsUnique } from '../../../common';
 import { RegisterAuthValidator } from '../decorators';
+import { UserEntity } from '../../user/entities/user.entities';
 
 // TODO Mostly primitives checks
 export class RegistrationAuthDto {
@@ -11,7 +11,7 @@ export class RegistrationAuthDto {
   @Transform(({ value }: { value: string }) => value.trim())
   @MinLength(3)
   @MaxLength(10)
-  @IsUnique(User, 'login')
+  @IsUnique(UserEntity, 'login')
   login: string;
 
   @IsNotEmpty()
@@ -24,7 +24,7 @@ export class RegistrationAuthDto {
   @IsNotEmpty()
   @Transform(({ value }: { value: string }) => value.trim())
   @IsUrl()
-  @IsUnique(User, 'email')
+  @IsUnique(UserEntity, 'email')
   @RegisterAuthValidator()
   email: string;
 }

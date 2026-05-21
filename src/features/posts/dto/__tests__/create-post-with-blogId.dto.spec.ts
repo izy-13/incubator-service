@@ -1,6 +1,6 @@
 import { useContainer, validate } from 'class-validator';
 import { CreatePostWithBlogIdDto } from '../create-post-with-blogId.dto';
-import { BlogExistsConstraint } from '../../../../decorators/blog-exists/blog-exists.decorator';
+import { BlogExistsConstraint } from '../../../blogs/decorators/blog-exists.decorator';
 import { BlogsService } from '../../../blogs/blogs.service';
 
 describe('CreatePostWithBlogIdDto', () => {
