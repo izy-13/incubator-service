@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { AuthRegistrationController, AuthSessionController } from './auth.controllers';
 import { UsersModule } from '../user/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
@@ -14,17 +13,18 @@ import {
   ResendAuthValidatorConstraint,
 } from './decorators';
 import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
+import { AuthUseCases } from './use-cases';
 
 @Module({
-  controllers: [AuthController],
-  exports: [AuthRepository, AuthService, RefreshTokenGuard],
+  controllers: [AuthSessionController, AuthRegistrationController],
+  exports: [AuthRepository, RefreshTokenGuard, ...AuthUseCases],
   imports: [
     MongooseModule.forFeature([{ name: AuthEntity.name, schema: AuthSchema }]),
     JwtModule.register({}),
     forwardRef(() => UsersModule),
   ],
   providers: [
-    AuthService,
+    ...AuthUseCases,
     { provide: APP_GUARD, useClass: AccessTokenGuard },
     RefreshTokenGuard,
     AuthQueryRepository,
