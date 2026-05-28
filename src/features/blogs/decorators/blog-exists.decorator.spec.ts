@@ -1,28 +1,28 @@
 import { BlogExistsConstraint } from './blog-exists.decorator';
-import { BlogsService } from '../blogs.service';
+import { FindBlogUseCase } from '../use-cases';
 import { NotFoundException } from '@nestjs/common';
 
 describe('BlogExistsConstraint', () => {
-  let blogsService: BlogsService;
+  let findBlogUseCase: FindBlogUseCase;
   let blogExistsConstraint: BlogExistsConstraint;
 
   beforeEach(() => {
-    blogsService = { findOne: jest.fn() } as unknown as BlogsService;
-    blogExistsConstraint = new BlogExistsConstraint(blogsService);
+    findBlogUseCase = { execute: jest.fn() } as unknown as FindBlogUseCase;
+    blogExistsConstraint = new BlogExistsConstraint(findBlogUseCase);
   });
 
   it('should return true if blog exists', async () => {
-    (blogsService.findOne as jest.Mock).mockResolvedValue({ id: 'validId' });
+    (findBlogUseCase.execute as jest.Mock).mockResolvedValue({ id: 'validId' });
     await expect(blogExistsConstraint.validate('validId')).resolves.toBe(true);
   });
 
   it('should return false if blog does not exist', async () => {
-    (blogsService.findOne as jest.Mock).mockResolvedValue(null);
+    (findBlogUseCase.execute as jest.Mock).mockResolvedValue(null);
     await expect(blogExistsConstraint.validate('invalidId')).resolves.toBe(false);
   });
 
-  it('should throw an error if blogsService.findOne throws an error', async () => {
-    (blogsService.findOne as jest.Mock).mockRejectedValue(new NotFoundException());
+  it('should throw an error if findBlogUseCase.execute throws an error', async () => {
+    (findBlogUseCase.execute as jest.Mock).mockRejectedValue(new NotFoundException());
     await expect(blogExistsConstraint.validate('errorId')).resolves.toBe(false);
   });
 

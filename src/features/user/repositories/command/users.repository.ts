@@ -3,7 +3,7 @@ import { UserEntity } from '../../entities';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../../dto';
-import { UserViewModelType } from '../../api';
+import { UserViewModelType } from '../../viewModel';
 import { UsersQueryRepository } from '../query';
 import { generateBcryptHash } from '../../../../common';
 import { genSalt } from 'bcrypt';

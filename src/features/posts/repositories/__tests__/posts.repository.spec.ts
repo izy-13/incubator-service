@@ -5,13 +5,13 @@ import { PostsRepository } from '../posts.repository';
 import { PostDb } from '../../schemas/post.schema';
 import { NotFoundException } from '@nestjs/common';
 import { dbConnect, dbDisconnect } from '../../../../infrastructure';
-import { BlogsService } from '../../../blogs/blogs.service';
+import { FindBlogUseCase } from '../../../blogs/use-cases';
 import { UpdatePostDto } from '../../dto/update-post.dto';
 import { CreatePostWithBlogIdDto } from '../../dto/create-post-with-blogId.dto';
 
 describe('PostsRepository', () => {
   let postsRepository: PostsRepository;
-  let blogsService: BlogsService;
+  let findBlogUseCase: FindBlogUseCase;
   let postModel: Model<PostDb>;
 
   const connection: mongoose.Connection = mongoose.connection;
@@ -30,16 +30,16 @@ describe('PostsRepository', () => {
 
     postModel = connection.model<PostDb>('Post', postSchema);
 
-    blogsService = {
-      findOne: jest
+    findBlogUseCase = {
+      execute: jest
         .fn()
         .mockResolvedValue({ id: new mongoose.Types.ObjectId().toString(), name: 'Test Blog' }),
-    } as unknown as BlogsService;
+    } as unknown as FindBlogUseCase;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PostsRepository,
-        { provide: BlogsService, useValue: blogsService },
+        { provide: FindBlogUseCase, useValue: findBlogUseCase },
         { provide: getModelToken(PostDb.name), useValue: postModel },
       ],
     }).compile();

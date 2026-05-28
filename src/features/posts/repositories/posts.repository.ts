@@ -5,17 +5,17 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 import { forwardRef, Inject, NotFoundException } from '@nestjs/common';
 import { PostEntity } from '../entities/post.entity';
 import { CreatePostWithBlogIdDto } from '../dto/create-post-with-blogId.dto';
-import { BlogsService } from '../../blogs/blogs.service';
+import { FindBlogUseCase } from '../../blogs/use-cases';
 
 export class PostsRepository {
   constructor(
-    @Inject(forwardRef(() => BlogsService))
-    private readonly blogsService: BlogsService,
+    @Inject(forwardRef(() => FindBlogUseCase))
+    private readonly findBlogUseCase: FindBlogUseCase,
     @InjectModel(PostDb.name) private readonly postModel: Model<PostDb>,
   ) {}
 
   async createPost(createPostDto: CreatePostWithBlogIdDto): Promise<PostEntity> {
-    const blog = await this.blogsService.findOne(createPostDto.blogId);
+    const blog = await this.findBlogUseCase.execute(createPostDto.blogId);
 
     const newPost: PostDb = {
       ...createPostDto,

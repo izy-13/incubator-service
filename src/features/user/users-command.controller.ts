@@ -2,34 +2,35 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Put,
-  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { UsersService } from '../application';
-import { CreateUserDto, FindAllUsersQueryDto, UpdateUserDto } from '../dto';
 import {
   BasicAuthGuard,
   ObjectIdValidationPipe,
-  PaginatedResponse,
   PublicApi,
   ResultNotification,
   routesConstants,
-} from '../../../common';
-import { UserViewModelType } from '../api';
+} from '../../common';
+import { CreateUserDto, UpdateUserDto } from './dto';
+import { UserViewModelType } from './viewModel';
+import { CreateUserUseCase, DeleteUserUseCase, UpdateUserUseCase } from './use-cases';
 
 const { USERS } = routesConstants;
 
 @Controller(USERS)
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+export class UsersCommandController {
+  constructor(
+    private readonly createUserUseCase: CreateUserUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
+    private readonly updateUserUseCase: UpdateUserUseCase,
+  ) {}
 
   @PublicApi()
   @UseGuards(BasicAuthGuard)
@@ -37,16 +38,7 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<UserViewModelType> {
-    return this.usersService.create(createUserDto);
-  }
-
-  @PublicApi()
-  @UseGuards(BasicAuthGuard)
-  @Get()
-  findAll(
-    @Query() queryParams: FindAllUsersQueryDto,
-  ): Promise<PaginatedResponse<UserViewModelType>> {
-    return this.usersService.findAll(queryParams);
+    return this.createUserUseCase.execute(createUserDto);
   }
 
   @PublicApi()
@@ -54,18 +46,12 @@ export class UsersController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ObjectIdValidationPipe) id: string) {
-    return this.usersService.remove(id);
-  }
-
-  @PublicApi()
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<UserViewModelType> {
-    return this.usersService.findOne(id);
+    return this.deleteUserUseCase.execute(id);
   }
 
   @PublicApi()
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.updateUserUseCase.execute(+id, updateUserDto);
   }
 }

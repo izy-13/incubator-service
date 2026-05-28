@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { BlogsService } from '../blogs/blogs.service';
-import { PostsService } from '../posts/posts.service';
-import { UsersService } from '../user/application';
+import { ClearBlogsUseCase } from '../blogs/use-cases';
+import { ClearPostsUseCase } from '../posts/use-cases';
+import { ClearUsersUseCase } from '../user/use-cases';
 import { ClearAuthUseCase } from '../auth/use-cases';
-import { DeviceSecurityService } from '../device-security/application/device-security.service';
+import { ClearDeviceSecurityUseCase } from '../device-security/use-cases';
 
 @Injectable()
 export class TestingService {
   constructor(
-    private readonly blogsService: BlogsService,
-    private readonly postsService: PostsService,
-    private readonly usersService: UsersService,
+    private readonly clearBlogsUseCase: ClearBlogsUseCase,
+    private readonly clearPostsUseCase: ClearPostsUseCase,
+    private readonly clearUsersUseCase: ClearUsersUseCase,
     private readonly clearAuthUseCase: ClearAuthUseCase,
-    private readonly deviceSecurityService: DeviceSecurityService,
+    private readonly clearDeviceSecurityUseCase: ClearDeviceSecurityUseCase,
   ) {}
 
   async remove() {
-    await this.blogsService.clearAll();
-    await this.postsService.clearAll();
-    await this.usersService.clearAll();
+    await this.clearBlogsUseCase.execute();
+    await this.clearPostsUseCase.execute();
+    await this.clearUsersUseCase.execute();
     await this.clearAuthUseCase.execute();
-    await this.deviceSecurityService.clearAll();
+    await this.clearDeviceSecurityUseCase.execute();
   }
 }

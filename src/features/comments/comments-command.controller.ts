@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -11,30 +10,24 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { CommentsService } from './comments.service';
-import { UpdateCommentDto } from './dto';
 import {
   formResponse,
   ObjectIdValidationPipe,
-  PublicApi,
   RequestWithJwt,
   ResultNotification,
   routesConstants,
 } from '../../common';
-import { CommentEntity } from './entities/comment.entity';
+import { UpdateCommentDto } from './dto';
+import { DeleteCommentUseCase, UpdateCommentUseCase } from './use-cases';
 
 const { COMMENTS } = routesConstants;
 
 @Controller(COMMENTS)
-export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
-
-  @PublicApi()
-  @Get(':id')
-  async findOne(@Param('id', ObjectIdValidationPipe) id: string): Promise<CommentEntity | null> {
-    const result = await this.commentsService.findOne(id);
-    return formResponse<CommentEntity | null>(result);
-  }
+export class CommentsCommandController {
+  constructor(
+    private readonly updateCommentUseCase: UpdateCommentUseCase,
+    private readonly deleteCommentUseCase: DeleteCommentUseCase,
+  ) {}
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ exceptionFactory: ResultNotification.validate }))
@@ -44,14 +37,14 @@ export class CommentsController {
     @Param('id', ObjectIdValidationPipe) id: string,
     @Body() updateCommentDto: UpdateCommentDto,
   ) {
-    const result = await this.commentsService.update(id, updateCommentDto, request?.user);
+    const result = await this.updateCommentUseCase.execute(id, updateCommentDto, request?.user);
     return formResponse(result);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Req() request: RequestWithJwt, @Param('id', ObjectIdValidationPipe) id: string) {
-    const result = await this.commentsService.remove(id, request?.user);
+    const result = await this.deleteCommentUseCase.execute(id, request?.user);
     return formResponse(result);
   }
 }

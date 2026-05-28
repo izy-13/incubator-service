@@ -1,15 +1,15 @@
 import { useContainer, validate } from 'class-validator';
 import { CreatePostWithBlogIdDto } from '../create-post-with-blogId.dto';
 import { BlogExistsConstraint } from '../../../blogs/decorators/blog-exists.decorator';
-import { BlogsService } from '../../../blogs/blogs.service';
+import { FindBlogUseCase } from '../../../blogs/use-cases';
 
 describe('CreatePostWithBlogIdDto', () => {
-  let blogsService: BlogsService;
+  let findBlogUseCase: FindBlogUseCase;
   let blogExistsConstraint: BlogExistsConstraint;
 
   beforeAll(() => {
-    blogsService = { findOne: jest.fn().mockResolvedValue(true) } as unknown as BlogsService;
-    blogExistsConstraint = new BlogExistsConstraint(blogsService);
+    findBlogUseCase = { execute: jest.fn().mockResolvedValue(true) } as unknown as FindBlogUseCase;
+    blogExistsConstraint = new BlogExistsConstraint(findBlogUseCase);
     jest.spyOn(blogExistsConstraint, 'validate').mockImplementation(() => Promise.resolve(true));
     useContainer({
       get: (someClass: any) => {

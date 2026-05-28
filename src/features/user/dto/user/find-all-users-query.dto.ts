@@ -1,4 +1,4 @@
-import { UserSortBy } from '../../api';
+import { UserSortBy } from '../../viewModel';
 import { BaseQueryParamsDto } from '../../../../common';
 
 export class FindAllUsersQueryDto extends BaseQueryParamsDto {

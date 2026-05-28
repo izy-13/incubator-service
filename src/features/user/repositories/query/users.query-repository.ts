@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { InjectModel } from '@nestjs/mongoose';
 import { UserEntity } from '../../entities';
 import { FilterQuery, Model } from 'mongoose';
-import { UserViewModelType } from '../../api';
+import { UserViewModelType } from '../../viewModel';
 import { FindAllUsersQueryDto } from '../../dto';
 import { formatPaginatedResponse, generateBcryptHash, PaginatedResponse } from '../../../../common';
 
