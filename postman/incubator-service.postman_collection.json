@@ -1,0 +1,694 @@
+{
+  "info": {
+    "_postman_id": "b1c2d3e4-f5a6-7890-bcde-1234567890ab",
+    "name": "Incubator Service",
+    "description": "Postman collection for the incubator-service NestJS API.\n\n## Environment\n- **Incubator Local** — `http://localhost:3000`\n\n## Linear walkthrough (run folders top to bottom)\n1. **Testing** — reset the database\n2. **Users** — `POST /users` creates a login-ready (auto-confirmed) user and seeds `user_login`/`user_password`\n3. **Auth** — `POST /auth/login` captures `access_token`; sets the `refreshToken` cookie\n4. **Blogs** — captures `blog_id`, then `post_id` from the nested blog post\n5. **Posts** — captures `comment_id` from the post comment\n6. **Comments** — read/update the captured comment\n7. **Security** — list active devices (captures `device_id`)\n8. **Teardown** — `POST /auth/logout`\n\n**Optional** — registration flow, destructive DELETEs, logout-all. Not part of the walkthrough.\n\n### Caveats\n- Access token expires in **10s** and the refresh token in **20s** — run requests promptly or re-login/refresh.\n- The `refreshToken` cookie is `Secure` + `HttpOnly`. Postman's cookie jar carries it automatically; over plain `http://localhost` a Secure cookie may not persist, which can break refresh/logout/device requests. See postman/README.md.\n- `email` fields are validated as a **URL** (`@IsUrl`), so use values like `https://example.com/user123`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.name) {",
+          "    throw new Error('Select an environment first: Incubator Local');",
+          "}",
+          "const base = pm.environment.get('base_url');",
+          "if (!base) {",
+          "    throw new Error('base_url is not set in the environment');",
+          "}",
+          "if (base.endsWith('/')) {",
+          "    pm.environment.set('base_url', base.replace(/\\/+$/, ''));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Testing",
+      "item": [
+        {
+          "name": "DELETE /testing/all-data",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/testing/all-data",
+            "description": "Public. Wipes all collections. Run first for a clean slate. 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "POST /users",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const rnd = Math.floor(Math.random() * 100000);",
+                  "pm.environment.set('user_login', 'user' + rnd);",
+                  "pm.environment.set('user_email', 'https://example.com/user' + rnd);",
+                  "pm.environment.set('user_password', 'password123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.environment.set('user_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{user_login}}\",\n  \"password\": \"{{user_password}}\",\n  \"email\": \"{{user_email}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/users",
+            "description": "Basic auth. Creates an auto-confirmed user that can log in immediately. Captures user_id and seeds user_login/user_password. 201 Created."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users?sortBy=createdAt&sortDirection=desc&pageNumber=1&pageSize=10",
+            "description": "Basic auth. Paginated list. Optional: searchLoginTerm, searchEmailTerm. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/:id",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/{{user_id}}",
+            "description": "Public. Get a single user by id. 200 OK."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) { pm.environment.set('access_token', json.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"loginOrEmail\": \"{{user_login}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/auth/login",
+            "description": "Public. Returns { accessToken } and sets the refreshToken cookie. Captures access_token. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/auth/me",
+            "description": "Bearer. Current authenticated user. 200 OK. Note: access token expires in 10s."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/refresh-token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) { pm.environment.set('access_token', json.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/auth/refresh-token",
+            "description": "Uses the refreshToken cookie (carried by Postman's cookie jar). Rotates and captures a new access_token. 200 OK."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Blogs",
+      "item": [
+        {
+          "name": "POST /blogs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.environment.set('blog_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Blog\",\n  \"description\": \"Blog description\",\n  \"websiteUrl\": \"https://example.com\",\n  \"isMembership\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/blogs",
+            "description": "Basic auth. Captures blog_id. 201 Created."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /blogs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/blogs?searchNameTerm=&sortBy=createdAt&sortDirection=desc&pageNumber=1&pageSize=10",
+            "description": "Public. Paginated list of blogs. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /blogs/:id",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/blogs/{{blog_id}}",
+            "description": "Public. Get a single blog by id. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /blogs/:id",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Blog\",\n  \"description\": \"Updated description\",\n  \"websiteUrl\": \"https://example.com/updated\",\n  \"isMembership\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/blogs/{{blog_id}}",
+            "description": "Basic auth. Update a blog. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /blogs/:blogId/posts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.environment.set('post_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Post title\",\n  \"shortDescription\": \"Short description\",\n  \"content\": \"Post content\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/blogs/{{blog_id}}/posts",
+            "description": "Basic auth. Create a post under a blog. Captures post_id. 201 Created."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /blogs/:blogId/posts",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/blogs/{{blog_id}}/posts?sortBy=createdAt&sortDirection=desc&pageNumber=1&pageSize=10",
+            "description": "Public. Paginated posts for a blog. 200 OK."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "POST /posts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.environment.set('post_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Standalone post\",\n  \"shortDescription\": \"Short description\",\n  \"content\": \"Post content\",\n  \"blogId\": \"{{blog_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/posts",
+            "description": "Basic auth. Create a post with blogId. Captures post_id. 201 Created."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /posts",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts?sortBy=createdAt&sortDirection=desc&pageNumber=1&pageSize=10",
+            "description": "Public. Paginated list of posts. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /posts/:id",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Public. Get a single post by id. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /posts/:id",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated post\",\n  \"shortDescription\": \"Updated short description\",\n  \"content\": \"Updated content\",\n  \"blogId\": \"{{blog_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Basic auth. Update a post. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /posts/:postId/comments",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}/comments?sortBy=createdAt&sortDirection=desc&pageNumber=1&pageSize=10",
+            "description": "Public. Paginated comments for a post. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /posts/:postId/comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.environment.set('comment_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"This is a valid comment with enough length.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/posts/{{post_id}}/comments",
+            "description": "Bearer. content must be 20-300 chars. Captures comment_id. 201 Created."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "GET /comments/:id",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/comments/{{comment_id}}",
+            "description": "Public. Get a single comment by id. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /comments/:id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated comment content with enough length.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/comments/{{comment_id}}",
+            "description": "Bearer (owner only). content 20-300 chars. 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Security",
+      "item": [
+        {
+          "name": "GET /security/devices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (Array.isArray(json) && json[0] && json[0].deviceId) { pm.environment.set('device_id', json[0].deviceId); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/security/devices",
+            "description": "Uses the refreshToken cookie. Lists active sessions. Captures device_id. 200 OK."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Optional (not in walkthrough)",
+      "item": [
+        {
+          "name": "POST /auth/registration",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"selfreg\",\n  \"password\": \"password123\",\n  \"email\": \"https://example.com/selfreg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/auth/registration",
+            "description": "Public. Self-registration (sends a confirmation email). email is validated as a URL. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/registration-confirmation",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PASTE-CONFIRMATION-CODE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/auth/registration-confirmation",
+            "description": "Public. Confirm registration with the code from the email. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/registration-email-resending",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"https://example.com/selfreg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/auth/registration-email-resending",
+            "description": "Public. Resend the confirmation email. email is validated as a URL. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /users/:id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{user_login}}\",\n  \"password\": \"{{user_password}}\",\n  \"email\": \"{{user_email}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/users/{{user_id}}",
+            "description": "Bearer. Update a user. 200 OK."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /users/:id",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/users/{{user_id}}",
+            "description": "Basic auth. Destructive. Delete a user. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /blogs/:id",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/blogs/{{blog_id}}",
+            "description": "Basic auth. Destructive. Delete a blog. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /posts/:id",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{admin_username}}", "type": "string" },
+                { "key": "password", "value": "{{admin_password}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Basic auth. Destructive. Delete a post. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /comments/:id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/comments/{{comment_id}}",
+            "description": "Bearer (owner only). Destructive. Delete a comment. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /security/devices/:deviceId",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/security/devices/{{device_id}}",
+            "description": "Uses the refreshToken cookie. Destructive. Terminate one device session. 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /security/devices",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/security/devices",
+            "description": "Uses the refreshToken cookie. Destructive. Terminate all other device sessions. 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teardown",
+      "item": [
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/auth/logout",
+            "description": "Uses the refreshToken cookie. Revokes the current session. 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
