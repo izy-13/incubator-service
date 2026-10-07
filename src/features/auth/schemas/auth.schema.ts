@@ -24,6 +24,9 @@ export class AuthEntity {
   @Prop({ required: true })
   attempts: number;
 
+  @Prop({ required: true, unique: true })
+  deviceId: string;
+
   @Prop()
   createdAt?: string;
 }

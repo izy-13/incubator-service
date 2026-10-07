@@ -4,6 +4,7 @@ import { PromiseResult, ResultNotification } from '../../../common';
 import { UsersRepository } from '../../user/repositories';
 import { AuthRepository } from '../repositories';
 import { emailManager } from '../../../infrastructure';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RegisterUseCase {
@@ -14,8 +15,10 @@ export class RegisterUseCase {
   ) {}
 
   async execute(registrationDto: RegistrationAuthDto): PromiseResult<string> {
+    const deviceId = uuidv4();
+
     const user = await this.usersRepository.createUser(registrationDto);
-    const code = await this.authRepository.createAuthInfoForUser(user.id);
+    const code = await this.authRepository.createAuthInfoForUser(user.id, deviceId);
 
     emailManager
       .sendConfirmationEmail(user.email, 'Confirm registration', code)

@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthRegistrationController, AuthSessionController } from './auth.controllers';
 import { UsersModule } from '../user/users.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -14,6 +14,7 @@ import {
 } from './decorators';
 import { AccessTokenStrategy, RefreshTokenStrategy } from './strategies';
 import { AuthUseCases } from './use-cases';
+import { DeviceDeletedListener } from './listeners';
 
 @Module({
   controllers: [AuthSessionController, AuthRegistrationController],
@@ -21,7 +22,7 @@ import { AuthUseCases } from './use-cases';
   imports: [
     MongooseModule.forFeature([{ name: AuthEntity.name, schema: AuthSchema }]),
     JwtModule.register({}),
-    forwardRef(() => UsersModule),
+    UsersModule,
   ],
   providers: [
     ...AuthUseCases,
@@ -34,6 +35,7 @@ import { AuthUseCases } from './use-cases';
     ResendAuthValidatorConstraint,
     AccessTokenStrategy,
     RefreshTokenStrategy,
+    DeviceDeletedListener,
   ],
 })
 export class AuthModule {}

@@ -17,7 +17,7 @@ export class BasicAuthGuard implements CanActivate {
     const [username, password] = credentials.split(':');
 
     if (username !== process.env.ADMIN || password !== process.env.PASSWORD) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('You are not admin');
     }
 
     return true;

@@ -21,6 +21,7 @@ import { CreateAuthDto } from './dto';
 import { MeEntity } from './entity/me.entity';
 import { RefreshTokenGuard } from './guards';
 import { FindMeUseCase, LoginUseCase, LogoutUseCase, RefreshTokenUseCase } from './use-cases';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 const { AUTH, LOGIN, ME, LOGOUT, REFRESH_TOKEN } = routesConstants;
 
@@ -34,6 +35,7 @@ export class AuthSessionController {
   ) {}
 
   @PublicApi()
+  @UseGuards(ThrottlerGuard)
   @Post(LOGIN)
   @HttpCode(HttpStatus.OK)
   async create(@Body() createAuthDto: CreateAuthDto, @Res() res: Response, @Req() req: Request) {
@@ -61,8 +63,13 @@ export class AuthSessionController {
   @UseGuards(RefreshTokenGuard)
   @Post(REFRESH_TOKEN)
   @HttpCode(HttpStatus.OK)
-  async refreshToken(@ExtractCookies('refreshToken') refreshToken: string, @Res() res: Response) {
-    const result = await this.refreshTokenUseCase.execute(refreshToken);
+  async refreshToken(
+    @ExtractCookies('refreshToken') refreshToken: string,
+    @Res() res: Response,
+    @Req() request: RequestWithJwt,
+  ) {
+    const deviceId = request?.user?.deviceId ?? '';
+    const result = await this.refreshTokenUseCase.execute(refreshToken, deviceId);
 
     if (result.data) {
       const { data } = result;
@@ -80,8 +87,13 @@ export class AuthSessionController {
   @UseGuards(RefreshTokenGuard)
   @Post(LOGOUT)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@ExtractCookies('refreshToken') refreshToken: string) {
-    const result = await this.logoutUseCase.execute(refreshToken);
+  async logout(
+    @ExtractCookies('refreshToken') refreshToken: string,
+    @Req() request: RequestWithJwt,
+  ) {
+    const deviceId = request?.user?.deviceId ?? '';
+    const result = await this.logoutUseCase.execute(refreshToken, deviceId);
+
     return formResponse(result);
   }
 }

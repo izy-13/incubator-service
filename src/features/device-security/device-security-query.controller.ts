@@ -1,5 +1,5 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { PublicApi, routesConstants } from '../../common';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { PublicApi, RequestWithJwt, routesConstants } from '../../common';
 import { RefreshTokenGuard } from '../auth/guards';
 import { FindAllDeviceSecurityUseCase } from './use-cases';
 
@@ -12,7 +12,8 @@ export class DeviceSecurityQueryController {
   @PublicApi()
   @UseGuards(RefreshTokenGuard)
   @Get()
-  findAll() {
-    return this.findAllDeviceSecurityUseCase.execute();
+  findAll(@Req() request: RequestWithJwt) {
+    const userId = request?.user?.sub || '';
+    return this.findAllDeviceSecurityUseCase.execute(userId);
   }
 }

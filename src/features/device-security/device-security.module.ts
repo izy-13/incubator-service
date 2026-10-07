@@ -5,8 +5,13 @@ import { DeviceSecurityCommandController } from './device-security-command.contr
 import { DeviceSecurityQueryController } from './device-security-query.controller';
 import { AuthModule } from '../auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { DeviceSecurityRepository } from './repositories/device-security.repository';
+import { DeviceSecurityQueryRepository, DeviceSecurityRepository } from './repositories';
 import { DeviceSecurityUseCases } from './use-cases';
+import {
+  UserLoggedInListener,
+  UserLoggedOutListener,
+  UserLoggedRefreshListener,
+} from './listeners';
 
 @Module({
   imports: [
@@ -15,7 +20,14 @@ import { DeviceSecurityUseCases } from './use-cases';
     JwtModule.register({}),
   ],
   controllers: [DeviceSecurityQueryController, DeviceSecurityCommandController],
-  providers: [...DeviceSecurityUseCases, DeviceSecurityRepository],
+  providers: [
+    ...DeviceSecurityUseCases,
+    DeviceSecurityRepository,
+    DeviceSecurityQueryRepository,
+    UserLoggedInListener,
+    UserLoggedOutListener,
+    UserLoggedRefreshListener,
+  ],
   exports: [...DeviceSecurityUseCases],
 })
 export class DeviceSecurityModule {}

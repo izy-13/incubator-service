@@ -12,10 +12,19 @@ import {
   UsersModule,
 } from './features';
 import { MongooseModule } from '@nestjs/mongoose';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 10_000,
+        limit: 5,
+      },
+    ]),
     ConfigModule.forRoot({ isGlobal: true }),
+    EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({
       useFactory: () => {
         const isTestEnv = process.env.NODE_ENV === 'test';

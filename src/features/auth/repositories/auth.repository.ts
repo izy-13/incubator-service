@@ -14,10 +14,24 @@ export class AuthRepository {
     return !!result;
   }
 
-  async createAuthInfoForUser(userId: string, alreadyConfirmed: boolean = false): Promise<string> {
+  async createAuthInfoForUser(
+    userId: string,
+    deviceId: string,
+    alreadyConfirmed: boolean = false,
+  ): Promise<string> {
     const authInfo = createAuthInfoPayload(userId, alreadyConfirmed);
-    await this.authModel.create(authInfo);
+    await this.authModel.create({ ...authInfo, deviceId });
     return authInfo.code;
+  }
+
+  async createAuthInfoForUserWithToken(
+    userId: string,
+    refreshToken: string,
+    deviceId: string,
+    alreadyConfirmed: boolean = false,
+  ) {
+    const authInfo = createAuthInfoPayload(userId, alreadyConfirmed);
+    await this.authModel.create({ ...authInfo, refreshToken, deviceId });
   }
 
   async updateRegistrationCode(userId: string, authInfo: AuthEntity): Promise<string> {
@@ -31,6 +45,12 @@ export class AuthRepository {
     return await this.authModel.findOneAndUpdate({ userId }, { refreshToken }).exec();
   }
 
+  async saveRefreshToken(userId: string, deviceId: string, refreshToken: string) {
+    return this.authModel
+      .findOneAndUpdate({ userId, deviceId }, { refreshToken }, { new: true })
+      .exec();
+  }
+
   async replaceRefreshToken(oldRefreshToken: string, newRefreshToken: string) {
     return await this.authModel
       .findOneAndUpdate({ refreshToken: oldRefreshToken }, { refreshToken: newRefreshToken })
@@ -39,6 +59,18 @@ export class AuthRepository {
 
   async clearRefreshToken(refreshToken: string) {
     return await this.authModel.findOneAndUpdate({ refreshToken }, { refreshToken: '' }).exec();
+  }
+
+  async deleteByDeviceId(deviceId: string) {
+    return await this.authModel.findOneAndDelete({ deviceId }).exec();
+  }
+
+  async deleteAllByDeviceIdExcept(deviceId: string) {
+    return this.authModel
+      .deleteMany({
+        deviceId: { $ne: deviceId },
+      })
+      .exec();
   }
 
   async deleteAll() {
