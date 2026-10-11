@@ -29,6 +29,12 @@ export class AuthEntity {
 
   @Prop()
   createdAt?: string;
+
+  @Prop()
+  recoveryCode?: string;
+
+  @Prop()
+  recoveryCodeExpiredAt?: string;
 }
 
 export const AuthSchema = SchemaFactory.createForClass(AuthEntity);

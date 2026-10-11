@@ -7,4 +7,11 @@ export const emailManager = {
       ' </p>`;
     await emailAdapter.sendEmail(email, subject, html);
   },
+
+  async sendPasswordRecoveryEmail(email: string, subject: string, recoveryCode: string) {
+    const html = `<p>Password recovery:\n'
+      '     <a href='https://somesite.com/password-recovery?recoveryCode=${recoveryCode}'>recovery password</a>\n'
+      ' </p>`;
+    await emailAdapter.sendEmail(email, subject, html);
+  },
 };

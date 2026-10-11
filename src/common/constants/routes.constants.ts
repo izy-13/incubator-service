@@ -15,4 +15,6 @@ export const routesConstants = {
   REFRESH_TOKEN: 'refresh-token',
   SECURITY: 'security',
   DEVICES: 'devices',
+  PASSWORD_RECOVERY: 'password-recovery',
+  PASSWORD_NEW: 'new-password',
 };

@@ -6,6 +6,8 @@ import { LogoutUseCase } from './logout.use-case';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import { RegisterUseCase } from './register.use-case';
 import { ResendEmailUseCase } from './resend-email.use-case';
+import { PasswordRecoveryUseCase } from './password-recovery.use-case';
+import { NewPasswordUseCase } from './new-password.use-case';
 
 export * from './clear-auth.use-case';
 export * from './confirm-code.use-case';
@@ -15,6 +17,8 @@ export * from './logout.use-case';
 export * from './refresh-token.use-case';
 export * from './register.use-case';
 export * from './resend-email.use-case';
+export * from './password-recovery.use-case';
+export * from './new-password.use-case';
 
 export const AuthUseCases = [
   ClearAuthUseCase,
@@ -25,4 +29,6 @@ export const AuthUseCases = [
   RefreshTokenUseCase,
   RegisterUseCase,
   ResendEmailUseCase,
+  PasswordRecoveryUseCase,
+  NewPasswordUseCase,
 ];

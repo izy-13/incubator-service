@@ -1,8 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { AuthEntity } from '../schemas/auth.schema';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { createAuthInfoPayload } from './helpers/auth-payloads';
-import { createRegistrationCodeUpdate } from './helpers/auth-updates';
+import { createRecoveryCode, createRegistrationCodeUpdate } from './helpers/auth-updates';
 
 export class AuthRepository {
   constructor(@InjectModel(AuthEntity.name) private readonly authModel: Model<AuthEntity>) {}
@@ -41,6 +41,18 @@ export class AuthRepository {
     return update.code;
   }
 
+  async createRegistrationCode(userId: string): Promise<string> {
+    const { recoveryCode, recoveryCodeExpiredAt } = createRecoveryCode();
+    await this.authModel
+      .findOneAndUpdate(
+        { userId },
+        { recoveryCode, recoveryCodeExpiredAt },
+        { upsert: true, new: true },
+      )
+      .exec();
+    return recoveryCode;
+  }
+
   async saveRefreshTokenByUserId(userId: string, refreshToken: string) {
     return await this.authModel.findOneAndUpdate({ userId }, { refreshToken }).exec();
   }
@@ -71,6 +83,10 @@ export class AuthRepository {
         deviceId: { $ne: deviceId },
       })
       .exec();
+  }
+
+  async updateAuthInfo(filter: FilterQuery<AuthEntity>, data: Partial<AuthEntity>) {
+    return await this.authModel.findOneAndUpdate(filter, { $set: data }).exec();
   }
 
   async deleteAll() {

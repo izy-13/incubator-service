@@ -17,3 +17,10 @@ export const createRegistrationCodeUpdate = (authInfo: AuthEntity): Registration
     attempts: authInfo.attempts + 1,
   };
 };
+
+export const createRecoveryCode = () => {
+  const recoveryCode = uuidv4();
+  const recoveryCodeExpiredAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  return { recoveryCode, recoveryCodeExpiredAt };
+};

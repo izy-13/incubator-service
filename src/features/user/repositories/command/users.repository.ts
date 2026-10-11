@@ -41,6 +41,6 @@ export class UsersRepository {
   }
 
   async updateUser(id: string, data: Partial<UserEntity>) {
-    return await this.userModel.findOneAndUpdate({ _id: id }, data).exec();
+    return await this.userModel.findOneAndUpdate({ _id: id }, { $set: data }, { new: true }).exec();
   }
 }

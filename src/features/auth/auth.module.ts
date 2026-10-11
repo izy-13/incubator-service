@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AuthRegistrationController, AuthSessionController } from './auth.controllers';
+import {
+  AuthPasswordRecoveryController,
+  AuthRegistrationController,
+  AuthSessionController,
+} from './auth.controllers';
 import { UsersModule } from '../user/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
@@ -17,7 +21,7 @@ import { AuthUseCases } from './use-cases';
 import { DeviceDeletedListener } from './listeners';
 
 @Module({
-  controllers: [AuthSessionController, AuthRegistrationController],
+  controllers: [AuthSessionController, AuthRegistrationController, AuthPasswordRecoveryController],
   exports: [AuthRepository, RefreshTokenGuard, ...AuthUseCases],
   imports: [
     MongooseModule.forFeature([{ name: AuthEntity.name, schema: AuthSchema }]),
